@@ -20,22 +20,23 @@ public class MapDescriptor {
      * identify if a cell is an obstacle.
      */
     public static void loadMap(Map map, String filename) {
-        try {
-            InputStream inputStream = new FileInputStream("maps/" + filename + ".txt");
-            BufferedReader buf = new BufferedReader(new InputStreamReader(inputStream));
-
-            String line = buf.readLine();
+        //use try-with-resources statement to ensure that each resource is closed at the end of the statement.
+        try (InputStream inputStream = new FileInputStream("maps/" + filename + ".txt");
+        BufferedReader mapReader = new BufferedReader(new InputStreamReader(inputStream)))
+        {
+            String line = mapReader.readLine();
             StringBuilder sb = new StringBuilder();
             while (line != null) {
                 sb.append(line);
-                line = buf.readLine();
+                line = mapReader.readLine();
             }
 
             String bin = sb.toString();
             int binPtr = 0;
             for (int row = MapConstants.NUM_ROWS - 1; row >= 0; row--) {
                 for (int col = 0; col < MapConstants.NUM_COLS; col++) {
-                    if (bin.charAt(binPtr) == '1') map.setObstacleCell(row, col, true);
+                    if (bin.charAt(binPtr) == '1') 
+                        map.setObstacleCell(row, col, true);
                     binPtr++;
                 }
             }
