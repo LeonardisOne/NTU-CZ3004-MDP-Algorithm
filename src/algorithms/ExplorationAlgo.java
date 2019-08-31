@@ -7,7 +7,7 @@ import robot.Robot;
 import robot.RobotConstants;
 import robot.RobotConstants.DIRECTION;
 import robot.RobotConstants.MOVEMENT;
-import utils.CommMgr;
+import utilities.CommMgr;
 
 /**
  * Exploration algorithm for the robot.

@@ -4,8 +4,8 @@ import map.Map;
 import map.MapConstants;
 import robot.RobotConstants.DIRECTION;
 import robot.RobotConstants.MOVEMENT;
-import utils.CommMgr;
-import utils.MapDescriptor;
+import utilities.CommMgr;
+import utilities.MapDescriptor;
 
 import java.util.concurrent.TimeUnit;
 

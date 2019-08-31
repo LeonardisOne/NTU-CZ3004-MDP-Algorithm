@@ -6,23 +6,23 @@ import map.Map;
 import map.MapConstants;
 import robot.Robot;
 import robot.RobotConstants;
-import utils.CommMgr;
+import utilities.CommMgr;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import static utils.MapDescriptor.createMapDescriptor;
-import static utils.MapDescriptor.loadMap;
+import static utilities.MapDescriptor.createMapDescriptor;
+import static utilities.MapDescriptor.loadMap;
 
 /**
- * Simulator for robot navigation in virtual arena.
+ * Simulator application for robot exploration and navigation in a virtual arena.
  *
  * @author MDP Group 3
  */
 
-public class Simulator {
+public class SimulatorApp {
     private static JFrame _appFrame = null;         // application JFrame
 
     private static JPanel _mapCards = null;         // JPanel for map views
@@ -31,10 +31,10 @@ public class Simulator {
     private static Robot bot;
 
     private static Map actualMap = null;              // real map
-    private static Map exploredMap = null;          // exploration map
+    private static Map exploredMap = null;          // map of the explored parts of the arena
 
-    private static int timeLimit = 3600;            // time limit
-    private static int coverageLimit = 300;         // coverage limit
+    private static int timeLimit = 3600;            // time limit in seconds
+    private static int coverageLimit = 300;         // coverage limit in number of cells
 
     private static final CommMgr comm = CommMgr.getCommMgr();
     private static final boolean actualRun = false;
@@ -66,7 +66,7 @@ public class Simulator {
     private static void displayEverything() {
         // Initialise main frame for display
         _appFrame = new JFrame();
-        _appFrame.setTitle("MDP Group 2 Simulator");
+        _appFrame.setTitle("MDP Group 3 Simulator");
         _appFrame.setSize(new Dimension(690, 700));
         _appFrame.setResizable(false);
 
@@ -123,11 +123,28 @@ public class Simulator {
     }
 
     /**
-     * Helper method to set particular properties for all the JButtons.
+     * Helper method to create a JButton with a default font.
+     * 
+     * The default font is Arial, size 13 in Bold.
      */
-    private static void formatButton(JButton btn) {
+    private static JButton makeButton(String btnText) {
+        JButton btn = new JButton(btnText);
         btn.setFont(new Font("Arial", Font.BOLD, 13));
         btn.setFocusPainted(false);
+        return btn;
+    }
+
+    /**
+     * Helper method to create a JDialog with default size and layout.
+     * 
+     * The default size is width 400, height 60.
+     */
+    private static JDialog makeDialog(String headerText, String displayText){
+        JDialog dialog = new JDialog(_appFrame, headerText, true);
+        dialog.setSize(400, 60);
+        dialog.setLayout(new FlowLayout());
+        dialog.add(new JLabel(displayText));
+        return dialog;
     }
 
     /**
@@ -137,13 +154,10 @@ public class Simulator {
     private static void addButtons() {
         if (!actualRun) {
             // Load Map Button
-            JButton btn_LoadMap = new JButton("Load Map");
-            formatButton(btn_LoadMap);
+            JButton btn_LoadMap = makeButton("Load Map");
             btn_LoadMap.addMouseListener(new MouseAdapter() {
                 public void mousePressed(MouseEvent e) {
-                    JDialog loadMapDialog = new JDialog(_appFrame, "Load Map", true);
-                    loadMapDialog.setSize(400, 60);
-                    loadMapDialog.setLayout(new FlowLayout());
+                    JDialog loadMapDialog = makeDialog("Load Map", "File Name: ");
 
                     final JTextField loadTF = new JTextField(15);
                     JButton loadMapButton = new JButton("Load");
@@ -158,7 +172,6 @@ public class Simulator {
                         }
                     });
 
-                    loadMapDialog.add(new JLabel("File Name: "));
                     loadMapDialog.add(loadTF);
                     loadMapDialog.add(loadMapButton);
                     loadMapDialog.setVisible(true);
@@ -220,8 +233,7 @@ public class Simulator {
         }
 
         // Exploration Button
-        JButton btn_Exploration = new JButton("Exploration");
-        formatButton(btn_Exploration);
+        JButton btn_Exploration = makeButton("Exploration");
         btn_Exploration.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 CardLayout cl = ((CardLayout) _mapCards.getLayout());
@@ -232,8 +244,7 @@ public class Simulator {
         _buttons.add(btn_Exploration);
 
         // Fastest Path Button
-        JButton btn_FastestPath = new JButton("Fastest Path");
-        formatButton(btn_FastestPath);
+        JButton btn_FastestPath = makeButton("Fastest Path");
         btn_FastestPath.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 CardLayout cl = ((CardLayout) _mapCards.getLayout());
@@ -260,13 +271,10 @@ public class Simulator {
         }
 
         // Time-limited Exploration Button
-        JButton btn_TimeExploration = new JButton("Time-Limited");
-        formatButton(btn_TimeExploration);
+        JButton btn_TimeExploration = makeButton("Time-Limited");
         btn_TimeExploration.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                JDialog timeExploDialog = new JDialog(_appFrame, "Time-Limited Exploration", true);
-                timeExploDialog.setSize(400, 60);
-                timeExploDialog.setLayout(new FlowLayout());
+                JDialog timeExploDialog = makeDialog("Time-Limited Exploration", "Time Limit (in MM:SS): ");
                 final JTextField timeTF = new JTextField(5);
                 JButton timeSaveButton = new JButton("Run");
 
@@ -282,7 +290,6 @@ public class Simulator {
                     }
                 });
 
-                timeExploDialog.add(new JLabel("Time Limit (in MM:SS): "));
                 timeExploDialog.add(timeTF);
                 timeExploDialog.add(timeSaveButton);
                 timeExploDialog.setVisible(true);
@@ -307,13 +314,10 @@ public class Simulator {
         }
 
         // Coverage-limited Exploration Button
-        JButton btn_CoverageExploration = new JButton("Coverage-Limited");
-        formatButton(btn_CoverageExploration);
+        JButton btn_CoverageExploration = makeButton("Coverage-Limited");
         btn_CoverageExploration.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                JDialog coverageExploDialog = new JDialog(_appFrame, "Coverage-Limited Exploration", true);
-                coverageExploDialog.setSize(400, 60);
-                coverageExploDialog.setLayout(new FlowLayout());
+                JDialog coverageExploDialog = makeDialog("Coverage-Limited Exploration", "Coverage Limit (% of maze): ");
                 final JTextField coverageTF = new JTextField(5);
                 JButton coverageSaveButton = new JButton("Run");
 
@@ -327,7 +331,6 @@ public class Simulator {
                     }
                 });
 
-                coverageExploDialog.add(new JLabel("Coverage Limit (% of maze): "));
                 coverageExploDialog.add(coverageTF);
                 coverageExploDialog.add(coverageSaveButton);
                 coverageExploDialog.setVisible(true);
