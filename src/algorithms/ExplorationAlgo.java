@@ -21,7 +21,7 @@ public class ExplorationAlgo {
     private final Robot bot;
     private final int coverageLimit;
     private final int timeLimit;
-    private int areaExplored;
+    private static int areaExplored = 0; //area of start & goal zone
     private long startTime;
     private long endTime;
     private int lastCalibrate;
@@ -36,33 +36,40 @@ public class ExplorationAlgo {
     }
 
     /**
+     * Increment the area explored by 1 when called.
+     */
+    public static void incAreaExplored(){
+        areaExplored++;
+    }
+
+    /**
      * Main method that is called to start the exploration.
      */
     public void runExploration() {
-        if (bot.getActualBot()) {
+        boolean actualBot = bot.getActualBot();
+        if (actualBot) {
             System.out.println("Starting calibration...");
 
             CommMgr.getCommMgr().receiveMsg();
-            if (bot.getActualBot()) {
-                bot.move(MOVEMENT.LEFT, false);
-                CommMgr.getCommMgr().receiveMsg();
-                bot.move(MOVEMENT.CALIBRATE, false);
-                CommMgr.getCommMgr().receiveMsg();
-                bot.move(MOVEMENT.LEFT, false);
-                CommMgr.getCommMgr().receiveMsg();
-                bot.move(MOVEMENT.CALIBRATE, false);
-                CommMgr.getCommMgr().receiveMsg();
-                bot.move(MOVEMENT.RIGHT, false);
-                CommMgr.getCommMgr().receiveMsg();
-                bot.move(MOVEMENT.CALIBRATE, false);
-                CommMgr.getCommMgr().receiveMsg();
-                bot.move(MOVEMENT.RIGHT, false);
-            }
+            bot.move(MOVEMENT.LEFT, false);
+            CommMgr.getCommMgr().receiveMsg();
+            bot.move(MOVEMENT.CALIBRATE, false);
+            CommMgr.getCommMgr().receiveMsg();
+            bot.move(MOVEMENT.LEFT, false);
+            CommMgr.getCommMgr().receiveMsg();
+            bot.move(MOVEMENT.CALIBRATE, false);
+            CommMgr.getCommMgr().receiveMsg();
+            bot.move(MOVEMENT.RIGHT, false);
+            CommMgr.getCommMgr().receiveMsg();
+            bot.move(MOVEMENT.CALIBRATE, false);
+            CommMgr.getCommMgr().receiveMsg();
+            bot.move(MOVEMENT.RIGHT, false);
 
             while (true) {
                 System.out.println("Waiting for START_EXPR...");
                 String msg = CommMgr.getCommMgr().receiveMsg();
                 String[] msgArr = msg.split(";");
+                // if the 1st msg is "START_EXPR", exit while loop
                 if (msgArr[0].equals(CommMgr.START_EXPR)) break;
             }
         }
@@ -72,12 +79,14 @@ public class ExplorationAlgo {
         startTime = System.currentTimeMillis();
         endTime = startTime + (timeLimit * 1000);
 
-        if (bot.getActualBot()) {
+        if (actualBot) {
             CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
         }
+        //area of start & goal zone
+        System.out.println("Explored Area: " + areaExplored);
         senseAndUpdate();
 
-        areaExplored = calculateAreaExplored();
+        //areaExplored = calculateAreaExplored();
         System.out.println("Explored Area: " + areaExplored);
 
         explorationLoop(bot.getRobotPosRow(), bot.getRobotPosCol());
@@ -93,7 +102,7 @@ public class ExplorationAlgo {
         do {
             nextAction();
 
-            areaExplored = calculateAreaExplored();
+            //areaExplored = calculateAreaExplored();
             System.out.println("Area explored: " + areaExplored);
 
             if (bot.getRobotPosRow() == r && bot.getRobotPosCol() == c) {
@@ -224,7 +233,7 @@ public class ExplorationAlgo {
         returnToStart.runFastestPath(RobotConstants.START_ROW, RobotConstants.START_COL);
 
         System.out.println("Exploration complete!");
-        areaExplored = calculateAreaExplored();
+        //areaExplored = calculateAreaExplored();
         System.out.printf("%.2f%% Coverage", (areaExplored / 300.0) * 100.0);
         System.out.println(", " + areaExplored + " Cells");
         System.out.println((System.currentTimeMillis() - startTime) / 1000 + " Seconds");
@@ -262,10 +271,9 @@ public class ExplorationAlgo {
         return false;
     }
 
-    /**
-     * Returns the number of cells explored in the grid.
+    /* Returns the number of cells explored in the grid.
      */
-    private int calculateAreaExplored() {
+    /* private int calculateAreaExplored() {
         int result = 0;
         for (int r = 0; r < MapConstants.NUM_ROWS; r++) {
             for (int c = 0; c < MapConstants.NUM_COLS; c++) {
@@ -275,7 +283,7 @@ public class ExplorationAlgo {
             }
         }
         return result;
-    }
+    } */
 
     /**
      * Moves the bot, repaints the map and calls senseAndUpdate().

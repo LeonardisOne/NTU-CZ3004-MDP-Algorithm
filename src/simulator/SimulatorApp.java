@@ -55,7 +55,7 @@ public class SimulatorApp {
 
         exploredMap = new Map(bot);
         //exploredMap.setAllUnexplored();
-        exploredMap.setExploredArea();
+        exploredMap.setAndIncExploredArea();
 
         displayEverything();
     }

@@ -79,30 +79,30 @@ public class Sensor {
      * Sets the correct cells in virtual arena to explored and/or obstacle according to the simulated sensor value.
      */
     private void processSensorVal(Map exploredMap, Map actualMap, int rowInc, int colInc) {
-        int row = this.sensorPosRow;
-        int col = this.sensorPosCol;
+        int row = sensorPosRow;
+        int col = sensorPosCol;
 
         // Check if starting point is valid for sensors with lowerRange > 1.
         if (lowerRange > 1) {
-            for (int i = 1; i < this.lowerRange; i++) {
+            for (int i = 1; i < lowerRange; i++) {
                 row += rowInc;
                 col += colInc;
 
                 if (!exploredMap.isCellValid(row, col)) return;
                 if (actualMap.getCell(row, col).getIsObstacle()) return;
             }
-            row = this.sensorPosRow;
-            col = this.sensorPosCol;
+            row = sensorPosRow;
+            col = sensorPosCol;
         }
 
         // Check if anything is detected by the sensor and return that value.
-        for (int i = this.lowerRange; i <= this.upperRange; i++) {
+        for (int i = lowerRange; i <= upperRange; i++) {
             row += rowInc;
             col += colInc;
 
             if (!exploredMap.isCellValid(row, col)) return;
 
-            exploredMap.getCell(row, col).setIsExplored(true);
+            exploredMap.getCell(row, col).setAndIncIsExplored(true);
 
             if (actualMap.getCell(row, col).getIsObstacle()) {
                 exploredMap.setObstacleCell(row, col, true);
@@ -119,11 +119,11 @@ public class Sensor {
     private void processSensorVal(Map exploredMap, int sensorVal, int rowInc, int colInc) {
         if (sensorVal == 0) return;  // return value for LR sensor if obstacle before lowerRange
 
-        int row = this.sensorPosRow;
-        int col = this.sensorPosCol;
+        int row = sensorPosRow;
+        int col = sensorPosCol;
 
         // If above fails, check if starting point is valid for sensors with lowerRange > 1.
-        for (int i = 1; i < this.lowerRange; i++) {
+        for (int i = 1; i < lowerRange; i++) {
             row += rowInc;
             col += colInc;
 
@@ -131,17 +131,17 @@ public class Sensor {
             if (exploredMap.getCell(row, col).getIsObstacle()) return;
         }
 
-        row = this.sensorPosRow;
-        col = this.sensorPosCol;
+        row = sensorPosRow;
+        col = sensorPosCol;
 
         // Update map according to sensor's value.
-        for (int i = this.lowerRange; i <= this.upperRange; i++) {
+        for (int i = lowerRange; i <= upperRange; i++) {
             row += rowInc;
             col += colInc;
 
             if (!exploredMap.isCellValid(row, col)) continue;
 
-            exploredMap.getCell(row, col).setIsExplored(true);
+            exploredMap.getCell(row, col).setAndIncIsExplored(true);
 
             if (sensorVal == i) {
                 exploredMap.setObstacleCell(row, col, true);

@@ -1,5 +1,7 @@
 package map;
 
+import algorithms.ExplorationAlgo;
+
 /**
  * Represents each cell in the map grid.
  *
@@ -22,36 +24,44 @@ public class Cell {
     }
 
     public int getRow() {
-        return this.row;
+        return row;
     }
 
     public int getCol() {
-        return this.col;
+        return col;
     }
 
     public void setIsObstacle(boolean val) {
-        this.isObstacle = val;
+        isObstacle = val;
     }
 
     public boolean getIsObstacle() {
-        return this.isObstacle;
+        return isObstacle;
     }
 
     public void setVirtualWall(boolean val) {
         if (val || (row != 0 && row != MapConstants.NUM_ROWS - 1 && col != 0 && col != MapConstants.NUM_COLS - 1)) {
-            this.isVirtualWall = val;
+            isVirtualWall = val;
         }
     }
 
     public boolean getIsVirtualWall() {
-        return this.isVirtualWall;
+        return isVirtualWall;
     }
 
     public void setIsExplored(boolean val) {
-        this.isExplored = val;
+        isExplored = val;
+    }
+
+    public void setAndIncIsExplored(boolean val){
+        //increment area explored when an unexplored cell is explored
+        if(!isExplored && val==true){
+            ExplorationAlgo.incAreaExplored();
+        }
+        isExplored = val;
     }
 
     public boolean getIsExplored() {
-        return this.isExplored;
+        return isExplored;
     }
 }
