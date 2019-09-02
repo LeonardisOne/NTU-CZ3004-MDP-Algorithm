@@ -39,11 +39,11 @@ public class ExplorationAlgo {
      * Main method that is called to start the exploration.
      */
     public void runExploration() {
-        if (bot.getRealBot()) {
+        if (bot.getActualBot()) {
             System.out.println("Starting calibration...");
 
             CommMgr.getCommMgr().receiveMsg();
-            if (bot.getRealBot()) {
+            if (bot.getActualBot()) {
                 bot.move(MOVEMENT.LEFT, false);
                 CommMgr.getCommMgr().receiveMsg();
                 bot.move(MOVEMENT.CALIBRATE, false);
@@ -72,7 +72,7 @@ public class ExplorationAlgo {
         startTime = System.currentTimeMillis();
         endTime = startTime + (timeLimit * 1000);
 
-        if (bot.getRealBot()) {
+        if (bot.getActualBot()) {
             CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
         }
         senseAndUpdate();
@@ -229,7 +229,7 @@ public class ExplorationAlgo {
         System.out.println(", " + areaExplored + " Cells");
         System.out.println((System.currentTimeMillis() - startTime) / 1000 + " Seconds");
 
-        if (bot.getRealBot()) {
+        if (bot.getActualBot()) {
             turnBotToDir(DIRECTION.WEST);
             moveBot(MOVEMENT.CALIBRATE);
             turnBotToDir(DIRECTION.SOUTH);
@@ -281,7 +281,7 @@ public class ExplorationAlgo {
      * Moves the bot, repaints the map and calls senseAndUpdate().
      */
     private void moveBot(MOVEMENT m) {
-        bot.move(m);
+        bot.move(m, true);
         exploredMap.repaint();
         if (m != MOVEMENT.CALIBRATE) {
             senseAndUpdate();
@@ -290,7 +290,7 @@ public class ExplorationAlgo {
             commMgr.receiveMsg();
         }
 
-        if (bot.getRealBot() && !calibrationMode) {
+        if (bot.getActualBot() && !calibrationMode) {
             calibrationMode = true;
 
             if (canCalibrateNow(bot.getRobotCurDir())) {

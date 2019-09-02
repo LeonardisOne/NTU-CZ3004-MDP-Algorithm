@@ -35,18 +35,22 @@ public class Sensor {
     /**
      * Returns the number of cells to the nearest detected obstacle or -1 if no obstacle is detected.
      */
-    public int sense(Map exploredMap, Map actualMap) {
+    public void sense(Map exploredMap, Map actualMap) {
         switch (sensorDir) {
             case NORTH:
-                return getSensorVal(exploredMap, actualMap, 1, 0);
+                getSensorVal(exploredMap, actualMap, 1, 0);
+                break;
             case EAST:
-                return getSensorVal(exploredMap, actualMap, 0, 1);
+                getSensorVal(exploredMap, actualMap, 0, 1);
+                break;
             case SOUTH:
-                return getSensorVal(exploredMap, actualMap, -1, 0);
+                getSensorVal(exploredMap, actualMap, -1, 0);
+                break;
             case WEST:
-                return getSensorVal(exploredMap, actualMap, 0, -1);
+                getSensorVal(exploredMap, actualMap, 0, -1);
+                break;
         }
-        return -1;
+        //return -1;
     }
 
     /**

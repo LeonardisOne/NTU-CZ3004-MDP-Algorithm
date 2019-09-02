@@ -297,12 +297,12 @@ public class FastestPathAlgo {
 
             System.out.println("Movement " + MOVEMENT.print(m) + " from (" + tempBot.getRobotPosRow() + ", " + tempBot.getRobotPosCol() + ") to (" + temp.getRow() + ", " + temp.getCol() + ")");
 
-            tempBot.move(m);
+            tempBot.move(m, true);
             movements.add(m);
             outputString.append(MOVEMENT.print(m));
         }
 
-        if (!bot.getRealBot() || explorationMode) {
+        if (!bot.getActualBot() || explorationMode) {
             for (MOVEMENT x : movements) {
                 if (x == MOVEMENT.FORWARD) {
                     if (!canMoveForward()) {
@@ -311,7 +311,7 @@ public class FastestPathAlgo {
                     }
                 }
 
-                bot.move(x);
+                bot.move(x, true);
                 this.exploredMap.repaint();
 
                 // During exploration, use sensor data to update exploredMap.
@@ -338,7 +338,7 @@ public class FastestPathAlgo {
                         exploredMap.repaint();
                     }
 
-                    bot.move(x);
+                    bot.move(x, true);
                     exploredMap.repaint();
                 }
             }
