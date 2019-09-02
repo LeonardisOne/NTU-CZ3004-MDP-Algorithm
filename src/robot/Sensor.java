@@ -38,25 +38,47 @@ public class Sensor {
     public void sense(Map exploredMap, Map actualMap) {
         switch (sensorDir) {
             case NORTH:
-                getSensorVal(exploredMap, actualMap, 1, 0);
+                processSensorVal(exploredMap, actualMap, 1, 0);
                 break;
             case EAST:
-                getSensorVal(exploredMap, actualMap, 0, 1);
+                processSensorVal(exploredMap, actualMap, 0, 1);
                 break;
             case SOUTH:
-                getSensorVal(exploredMap, actualMap, -1, 0);
+                processSensorVal(exploredMap, actualMap, -1, 0);
                 break;
             case WEST:
-                getSensorVal(exploredMap, actualMap, 0, -1);
+                processSensorVal(exploredMap, actualMap, 0, -1);
                 break;
         }
         //return -1;
     }
 
     /**
-     * Sets the appropriate obstacle cell in the map and returns the row or column value of the obstacle cell.
+     * Overloads sense() method for use in actual robot.
+     * 
+     * Uses the sensor direction and given value from the actual sensor to update the map.
      */
-    private void getSensorVal(Map exploredMap, Map actualMap, int rowInc, int colInc) {
+    public void sense(Map exploredMap, int sensorVal) {
+        switch (sensorDir) {
+            case NORTH:
+                processSensorVal(exploredMap, sensorVal, 1, 0);
+                break;
+            case EAST:
+                processSensorVal(exploredMap, sensorVal, 0, 1);
+                break;
+            case SOUTH:
+                processSensorVal(exploredMap, sensorVal, -1, 0);
+                break;
+            case WEST:
+                processSensorVal(exploredMap, sensorVal, 0, -1);
+                break;
+        }
+    }
+
+    /**
+     * Sets the correct cells in virtual arena to explored and/or obstacle according to the simulated sensor value.
+     */
+    private void processSensorVal(Map exploredMap, Map actualMap, int rowInc, int colInc) {
         int row = this.sensorPosRow;
         int col = this.sensorPosCol;
 
@@ -90,44 +112,32 @@ public class Sensor {
     }
 
     /**
-     * Uses the sensor direction and given value from the actual sensor to update the map.
-     */
-    public void senseActual(Map exploredMap, int sensorVal) {
-        switch (sensorDir) {
-            case NORTH:
-                processSensorVal(exploredMap, sensorVal, 1, 0);
-                break;
-            case EAST:
-                processSensorVal(exploredMap, sensorVal, 0, 1);
-                break;
-            case SOUTH:
-                processSensorVal(exploredMap, sensorVal, -1, 0);
-                break;
-            case WEST:
-                processSensorVal(exploredMap, sensorVal, 0, -1);
-                break;
-        }
-    }
-
-    /**
+     * Overloads processSensorVal() method for use in actual robot.
+     * 
      * Sets the correct cells to explored and/or obstacle according to the actual sensor value.
      */
     private void processSensorVal(Map exploredMap, int sensorVal, int rowInc, int colInc) {
         if (sensorVal == 0) return;  // return value for LR sensor if obstacle before lowerRange
 
+        int row = this.sensorPosRow;
+        int col = this.sensorPosCol;
+
         // If above fails, check if starting point is valid for sensors with lowerRange > 1.
         for (int i = 1; i < this.lowerRange; i++) {
-            int row = this.sensorPosRow + (rowInc * i);
-            int col = this.sensorPosCol + (colInc * i);
+            row += rowInc;
+            col += colInc;
 
             if (!exploredMap.isCellValid(row, col)) return;
             if (exploredMap.getCell(row, col).getIsObstacle()) return;
         }
 
+        row = this.sensorPosRow;
+        col = this.sensorPosCol;
+
         // Update map according to sensor's value.
         for (int i = this.lowerRange; i <= this.upperRange; i++) {
-            int row = this.sensorPosRow + (rowInc * i);
-            int col = this.sensorPosCol + (colInc * i);
+            row += rowInc;
+            col += colInc;
 
             if (!exploredMap.isCellValid(row, col)) continue;
 

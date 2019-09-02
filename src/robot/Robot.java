@@ -280,12 +280,12 @@ public class Robot {
                 result[5] = Integer.parseInt(msgArr[6].split("_")[1]);
             }
 
-            SRFrontLeft.senseActual(explorationMap, result[0]);
-            SRFrontCenter.senseActual(explorationMap, result[1]);
-            SRFrontRight.senseActual(explorationMap, result[2]);
-            SRLeft.senseActual(explorationMap, result[3]);
-            SRRight.senseActual(explorationMap, result[4]);
-            LRLeft.senseActual(explorationMap, result[5]);
+            SRFrontLeft.sense(explorationMap, result[0]);
+            SRFrontCenter.sense(explorationMap, result[1]);
+            SRFrontRight.sense(explorationMap, result[2]);
+            SRLeft.sense(explorationMap, result[3]);
+            SRRight.sense(explorationMap, result[4]);
+            LRLeft.sense(explorationMap, result[5]);
 
             String[] mapStrings = MapDescriptor.createMapDescriptor(explorationMap);
             comm.sendMsg(mapStrings[0] + " " + mapStrings[1], CommMgr.MAP_STRING);
