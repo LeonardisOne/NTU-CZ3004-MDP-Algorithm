@@ -54,38 +54,39 @@ public class Sensor {
     }
 
     /**
-     * Sets the appropriate obstacle cell in the map and returns the row or column value of the obstacle cell. Returns
-     * -1 if no obstacle is detected.
+     * Sets the appropriate obstacle cell in the map and returns the row or column value of the obstacle cell.
      */
-    private int getSensorVal(Map exploredMap, Map actualMap, int rowInc, int colInc) {
+    private void getSensorVal(Map exploredMap, Map actualMap, int rowInc, int colInc) {
+        int row = this.sensorPosRow;
+        int col = this.sensorPosCol;
+
         // Check if starting point is valid for sensors with lowerRange > 1.
         if (lowerRange > 1) {
             for (int i = 1; i < this.lowerRange; i++) {
-                int row = this.sensorPosRow + (rowInc * i);
-                int col = this.sensorPosCol + (colInc * i);
+                row += rowInc;
+                col += colInc;
 
-                if (!exploredMap.isCellValid(row, col)) return i;
-                if (actualMap.getCell(row, col).getIsObstacle()) return i;
+                if (!exploredMap.isCellValid(row, col)) return;
+                if (actualMap.getCell(row, col).getIsObstacle()) return;
             }
+            row = this.sensorPosRow;
+            col = this.sensorPosCol;
         }
 
         // Check if anything is detected by the sensor and return that value.
         for (int i = this.lowerRange; i <= this.upperRange; i++) {
-            int row = this.sensorPosRow + (rowInc * i);
-            int col = this.sensorPosCol + (colInc * i);
+            row += rowInc;
+            col += colInc;
 
-            if (!exploredMap.isCellValid(row, col)) return i;
+            if (!exploredMap.isCellValid(row, col)) return;
 
             exploredMap.getCell(row, col).setIsExplored(true);
 
             if (actualMap.getCell(row, col).getIsObstacle()) {
                 exploredMap.setObstacleCell(row, col, true);
-                return i;
+                return;
             }
         }
-
-        // Else, return -1.
-        return -1;
     }
 
     /**
