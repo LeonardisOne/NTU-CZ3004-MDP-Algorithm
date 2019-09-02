@@ -99,6 +99,18 @@ public class Robot {
             }
         }
 
+        changePosOrDir(m);
+
+        if (actualBot) sendMovement(m, sendMoveToAndroid);
+        else System.out.println("Move: " + MOVEMENT.print(m));
+
+        setReachedGoal();
+    }
+
+    /**
+     * Takes in a MOVEMENT and change the position and direction of robot.
+     */
+    private void changePosOrDir(MOVEMENT m){
         switch (m) {
             case FORWARD:
                 switch (robotDir) {
@@ -142,11 +154,6 @@ public class Robot {
                 System.out.println("Error in Robot.move()!");
                 break;
         }
-
-        if (actualBot) sendMovement(m, sendMoveToAndroid);
-        else System.out.println("Move: " + MOVEMENT.print(m));
-
-        setReachedGoal();
     }
 
     /*Overloaded method that calls this.move(MOVEMENT m, boolean sendMoveToAndroid = true).
