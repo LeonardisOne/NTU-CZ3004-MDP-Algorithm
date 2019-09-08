@@ -1,3 +1,4 @@
 # NTU-CZ3004-MDP-Algorithm
 
-Version 1 of simulator and algorithms
+8 Sep 2019: Version 2 (Complete exploration, but not efficient enough)
+31 Aug 2019: Version 1 of simulator and algorithms
