@@ -32,9 +32,13 @@ public class Robot {
     private final boolean actualBot;
 
     public Robot(int row, int col, boolean actualBot) {
+        this(row, col, actualBot, RobotConstants.START_DIR);
+    }
+
+    public Robot(int row, int col, boolean actualBot, DIRECTION dir) {
         posRow = row;
         posCol = col;
-        robotDir = RobotConstants.START_DIR;
+        robotDir = dir;
         speed = RobotConstants.SPEED;
 
         this.actualBot = actualBot;
