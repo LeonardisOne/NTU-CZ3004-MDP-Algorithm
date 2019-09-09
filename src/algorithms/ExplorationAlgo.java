@@ -290,7 +290,7 @@ public class ExplorationAlgo {
      */
     private void moveBot(MOVEMENT m) {
         bot.move(m, true);
-        exploredMap.repaint();
+        exploredMap.revalidate();
         if (m != MOVEMENT.CALIBRATE) {
             senseAndUpdate();
         } else {
@@ -325,7 +325,7 @@ public class ExplorationAlgo {
     private void senseAndUpdate() {
         bot.setSensors();
         bot.sense(exploredMap, actualMap);
-        exploredMap.repaint();
+        exploredMap.repaint(1,1,600,700);
     }
 
     /**
