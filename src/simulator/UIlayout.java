@@ -55,7 +55,9 @@
         private static final String EXPLORE_PANEL = "Explore arena";
         private static final String FFP_PANEL = "Find fastest path";
 
-        private static String mapNum, speed; 
+        private static int speed;
+
+        private static String mapNum; 
         private static JFrame _appFrame = null;         // application JFrame
         private static JFrame main_frame;
         private static JPanel _mapCards = null;         // JPanel for map views
@@ -248,7 +250,7 @@
                     exploredMap.repaint(1,1,600,700);
 
                     ExplorationAlgo exploration;
-                    exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit);
+                    exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
 
                     if (actualRun) {
                         CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
@@ -273,7 +275,7 @@
                 exploreBtn.addMouseListener(new MouseAdapter() {
                     public void mousePressed(MouseEvent e){
                         mapNum = explore_TextFields[0].getText();
-                        speed = explore_TextFields[1].getText();
+                        speed = Integer.parseInt(explore_TextFields[1].getText());
                         timeLimit = Integer.parseInt(explore_TextFields[3].getText());
                         coverageLimit = (int) ((Integer.parseInt(explore_TextFields[2].getText())) * MapConstants.NUM_CELLS / 100.0);
                         loadMap(actualMap, mapNum);

@@ -60,7 +60,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static final String EXPLORE_PANEL = "Explore arena";
     private static final String FFP_PANEL = "Find fastest path";
 
-    private String mapNum, speed; 
+    private String mapNum; 
+    private int speed;
     private static JFrame _appFrame = null;         // application JFrame
     private static JFrame main_frame;
     private static JPanel _mapCards = null;         // JPanel for map views
@@ -380,7 +381,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 exploredMap.revalidate();
 
                 ExplorationAlgo exploration;
-                exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit);
+                exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
 
                 if (actualRun) {
                     CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
@@ -419,7 +420,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
 
         if(cmd.matches("ExploreMaze")){
-            speed = explore_TextFields[0].getText();
+            speed = Integer.parseInt(explore_TextFields[0].getText()) ;
             timeLimit = Integer.parseInt(explore_TextFields[2].getText());
             coverageLimit = (int) ((Integer.parseInt(explore_TextFields[1].getText())) * MapConstants.NUM_CELLS / 100.0);
             CardLayout c2 = ((CardLayout) arena_panel.getLayout());

@@ -32,7 +32,7 @@ public class SimulatorApp {
 
     private static Map actualMap = null;              // real map
     private static Map exploredMap = null;          // map of the explored parts of the arena
-
+    private static int speed;
     private static int timeLimit = 3600;            // time limit in seconds
     private static int coverageLimit = 300;         // coverage limit in number of cells
 
@@ -215,7 +215,7 @@ public class SimulatorApp {
                 exploredMap.repaint();
 
                 ExplorationAlgo exploration;
-                exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit);
+                exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
 
                 if (actualRun) {
                     CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
@@ -261,7 +261,7 @@ public class SimulatorApp {
                 bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
                 exploredMap.repaint();
 
-                ExplorationAlgo timeExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit);
+                ExplorationAlgo timeExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
                 timeExplo.runExploration();
 
                 createMapDescriptor(exploredMap);
@@ -304,7 +304,7 @@ public class SimulatorApp {
                 bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
                 exploredMap.repaint();
 
-                ExplorationAlgo coverageExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit);
+                ExplorationAlgo coverageExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
                 coverageExplo.runExploration();
 
                 createMapDescriptor(exploredMap);

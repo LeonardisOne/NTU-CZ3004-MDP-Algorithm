@@ -34,10 +34,11 @@ public class ExplorationAlgo {
     private LinkedList<Cell>[][] dfsNodes;
     private Stack<Cell> stack;
 
-    public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit) {
+    public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit, int speed) {
         this.exploredMap = exploredMap;
         this.actualMap = actualMap;
         this.bot = bot;
+        bot.setSpeed(speed);
         this.coverageLimit = coverageLimit;
         this.timeLimit = timeLimit;
         dfsNodes = new LinkedList[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
