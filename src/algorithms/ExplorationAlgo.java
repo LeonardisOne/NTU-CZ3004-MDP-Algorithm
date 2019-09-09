@@ -1,5 +1,9 @@
 package algorithms;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Stack;
+
 import map.Cell;
 import map.Map;
 import map.MapConstants;
@@ -21,11 +25,14 @@ public class ExplorationAlgo {
     private final Robot bot;
     private final int coverageLimit;
     private final int timeLimit;
-    private static int areaExplored = 0; //area of start & goal zone
+    private static int areaExplored = 0;
     private long startTime;
     private long endTime;
     private int lastCalibrate;
     private boolean calibrationMode;
+
+    private LinkedList<Cell>[][] dfsNodes;
+    private Stack<Cell> stack;
 
     public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit) {
         this.exploredMap = exploredMap;
@@ -33,6 +40,13 @@ public class ExplorationAlgo {
         this.bot = bot;
         this.coverageLimit = coverageLimit;
         this.timeLimit = timeLimit;
+        dfsNodes = new LinkedList[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
+        for(int row=0; row<MapConstants.NUM_ROWS; row++){
+            for(int col=0; col<MapConstants.NUM_COLS; col++){
+                dfsNodes[row][col] = new LinkedList<Cell>();
+            }
+        }
+        stack = new Stack<Cell>();
     }
 
     /**
@@ -40,6 +54,172 @@ public class ExplorationAlgo {
      */
     public static void incAreaExplored(){
         areaExplored++;
+    }
+
+    public void addNeighbours(int row, int col, Cell cell){
+        dfsNodes[row][col].add(cell);
+    }
+
+    public void doDFS(Cell cell){
+        //stack = new Stack<Cell>();
+
+        boolean[][] visited = new boolean[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
+
+        stack.push(cell);
+
+        Stack<Cell> prevCells = new Stack<Cell>();
+
+        while(!stack.empty() && areaExplored < coverageLimit && System.currentTimeMillis() < endTime){
+            Cell currentCell = stack.pop();
+
+            if(!visited[currentCell.getRow()][currentCell.getCol()]){
+                visited[currentCell.getRow()][currentCell.getCol()] = true;
+            }
+
+            getChildCells(currentCell);
+
+            Iterator<Cell> itr = dfsNodes[currentCell.getRow()][currentCell.getCol()].iterator();
+
+            boolean needBacktrack = true;
+
+            while(itr.hasNext()){
+                Cell childCell = itr.next();
+                //System.out.println("row " + childCell.getRow() + " col " + childCell.getCol() + childHasUnexploredNeighbours(childCell.getRow(), childCell.getCol()));
+                if(!visited[childCell.getRow()][childCell.getCol()]){
+                    needBacktrack = false;
+                    stack.push(childCell);
+                    System.out.println("row:" + childCell.getRow() + "col:" + childCell.getCol());
+                }
+            }
+            
+            if(needBacktrack){
+                Cell prevCell = prevCells.pop();
+                stack.push(prevCell);
+                System.out.println("row:" + prevCell.getRow() + "col:" + prevCell.getCol());
+            }
+
+            if(!stack.empty()){
+                Cell nextCell = stack.peek();
+                MOVEMENT m = compareToGetDir(currentCell, nextCell);
+                nextAction(m);
+                System.out.println("Area explored: " + areaExplored);
+                if(!needBacktrack){
+                    prevCells.push(currentCell);
+                }
+            }
+        }
+
+        backToStart();
+    }
+
+    /* private boolean childHasUnexploredNeighbours(int row, int col){
+        if(exploredMap.isCellValid(row, col - 3)){
+            if(!exploredMap.getCell(row, col - 3).getIsExplored())return true;
+        } 
+        else if(exploredMap.isCellValid(row + 3, col)){
+            if(!exploredMap.getCell(row + 3, col).getIsExplored()) return true;
+        }
+        else if(exploredMap.isCellValid(row, col + 4)){
+            //System.out.println(exploredMap.getCell(row, col + 3).getIsExplored());
+            if(!exploredMap.getCell(row, col + 4).getIsExplored()) {return true;}
+        }
+        else if(exploredMap.isCellValid(row - 3, col)){
+            if(!exploredMap.getCell(row - 3, col).getIsExplored()) return true;
+        }
+        return false;
+    } */
+
+    private MOVEMENT compareToGetDir(Cell currentCell, Cell nextCell){
+        int rowDiff = nextCell.getRow() - currentCell.getRow();
+        int colDiff = nextCell.getCol() - currentCell.getCol();
+        
+        switch(bot.getRobotCurDir()){
+            case NORTH:
+                if(colDiff==0){
+                    if(rowDiff>0){
+                        return MOVEMENT.FORWARD;
+                    }
+                    else{
+                        return MOVEMENT.BACKWARD;
+                    }
+                }
+                else if(colDiff>0){
+                    return MOVEMENT.RIGHT;
+                }
+                else{
+                    return MOVEMENT.LEFT;
+                }
+            case EAST:
+                if(rowDiff==0){
+                    if(colDiff>0){
+                        return MOVEMENT.FORWARD;
+                    }
+                    else{
+                        return MOVEMENT.BACKWARD;
+                    }
+                }
+                else if(rowDiff>0){
+                    return MOVEMENT.LEFT;
+                }
+                else{
+                    return MOVEMENT.RIGHT;
+                }
+            case SOUTH:
+                if(colDiff==0){
+                    if(rowDiff<0){
+                        return MOVEMENT.FORWARD;
+                    }
+                    else{
+                        return MOVEMENT.BACKWARD;
+                    }
+                }
+                else if(colDiff>0){
+                    return MOVEMENT.LEFT;
+                }
+                else{
+                    return MOVEMENT.RIGHT;
+                }
+            case WEST:
+                if(rowDiff==0){
+                    if(colDiff<0){
+                        return MOVEMENT.FORWARD;
+                    }
+                    else{
+                        return MOVEMENT.BACKWARD;
+                    }
+                }
+                else if(rowDiff<0){
+                    return MOVEMENT.LEFT;
+                }
+                else{
+                    return MOVEMENT.RIGHT;
+                }
+            default:
+                System.out.println(bot.getRobotCurDir());
+                return MOVEMENT.ERROR;
+        }
+    }
+
+    private void getChildCells(Cell cell){
+        int row = cell.getRow();
+        int col = cell.getCol();
+        Cell childCell;
+        if(southCanMove()){
+            childCell = exploredMap.getCell(row - 1, col);
+            addNeighbours(row, col, childCell);
+        }
+        if(westCanMove()){
+            childCell = exploredMap.getCell(row, col - 1);
+            addNeighbours(row, col, childCell);
+        }
+        if(northCanMove()){
+            childCell = exploredMap.getCell(row + 1, col);
+            addNeighbours(row, col, childCell);
+        }
+        if(eastCanMove()){
+            childCell = exploredMap.getCell(row, col + 1);
+            addNeighbours(row, col, childCell);
+        }
     }
 
     /**
@@ -89,16 +269,17 @@ public class ExplorationAlgo {
         //areaExplored = calculateAreaExplored();
         System.out.println("Explored Area: " + areaExplored);
 
-        explorationLoop(bot.getRobotPosRow(), bot.getRobotPosCol());
+        //explorationLoop(bot.getRobotPosRow(), bot.getRobotPosCol());
+        doDFS(exploredMap.getCell(bot.getRobotPosRow(), bot.getRobotPosCol()));
     }
 
-    /**
+    /*
      * Loops through robot movements until one (or more) of the following conditions is met:
      * 1. Robot is back at (r, c)
      * 2. areaExplored > coverageLimit
      * 3. System.currentTimeMillis() > endTime
      */
-    private void explorationLoop(int r, int c) {
+    /* private void explorationLoop(int r, int c) {
         do {
             nextAction();
 
@@ -113,12 +294,12 @@ public class ExplorationAlgo {
         } while (areaExplored <= coverageLimit && System.currentTimeMillis() <= endTime);
 
         backToStart();
-    }
+    } */
 
-    /**
+    /*
      * Determines the next move for the robot and executes it accordingly.
      */
-    private void nextAction() {
+    /* private void nextAction() {
         if (canMoveRight()) {
             moveBot(MOVEMENT.RIGHT);
             if (canMoveForward()) moveBot(MOVEMENT.FORWARD);
@@ -131,13 +312,50 @@ public class ExplorationAlgo {
             moveBot(MOVEMENT.RIGHT);
             moveBot(MOVEMENT.RIGHT);
         }
+    } */
+
+    private void nextAction(MOVEMENT m) {
+
+        switch(m){
+            case RIGHT:
+                moveBot(MOVEMENT.RIGHT);
+                moveBot(MOVEMENT.FORWARD);
+                break;
+            case FORWARD:
+                moveBot(MOVEMENT.FORWARD);
+                break;
+            case LEFT:
+                moveBot(MOVEMENT.LEFT);
+                moveBot(MOVEMENT.FORWARD);
+                break;
+            case BACKWARD:
+                moveBot(MOVEMENT.RIGHT);
+                moveBot(MOVEMENT.RIGHT);
+                moveBot(MOVEMENT.FORWARD);
+                break;
+            default:
+                System.out.print("MOVEMENT: " + m);
+                System.out.println(", DIR: " + bot.getRobotCurDir());
+                System.out.println("Error in row: " + bot.getRobotPosRow() + ", col: " + bot.getRobotPosCol());
+        }
     }
 
-    /**
+    /*
      * Returns true if the right side of the robot is free to move into.
      */
-    private boolean canMoveRight() {
-        switch (bot.getRobotCurDir()) {
+    /* private boolean canMoveRight() {
+        /* switch (bot.getRobotCurDir()) {
+            case NORTH:
+                if(eastCanMove()) return 'N';
+            case EAST:
+                if(southCanMove()) return 'E';
+            case SOUTH:
+                if(westCanMove()) return 'S';
+            case WEST:
+                if(northCanMove()) return 'W';
+        }
+        return 'X'; */
+        /* switch(bot.getRobotCurDir()){
             case NORTH:
                 return eastCanMove();
             case EAST:
@@ -148,12 +366,12 @@ public class ExplorationAlgo {
                 return northCanMove();
         }
         return false;
-    }
+    } */
 
-    /**
+    /*
      * Returns true if the robot is free to move forward.
      */
-    private boolean canMoveForward() {
+    /* private boolean canMoveForward() {
         switch (bot.getRobotCurDir()) {
             case NORTH:
                 return northCanMove();
@@ -165,12 +383,12 @@ public class ExplorationAlgo {
                 return westCanMove();
         }
         return false;
-    }
+    } */
 
-    /**
+    /*
      * * Returns true if the left side of the robot is free to move into.
      */
-    private boolean canMoveLeft() {
+    /* private boolean canMoveLeft() {
         switch (bot.getRobotCurDir()) {
             case NORTH:
                 return westCanMove();
@@ -182,7 +400,7 @@ public class ExplorationAlgo {
                 return southCanMove();
         }
         return false;
-    }
+    } */
 
     /**
      * Returns true if the robot can move to the north cell.
