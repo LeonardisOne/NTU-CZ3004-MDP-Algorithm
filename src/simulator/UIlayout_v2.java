@@ -95,12 +95,10 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
         if (!actualRun) {
             actualMap = new Map(bot);
-            //actualMap.setAllUnexplored();
             actualMap.setExploredArea();
         }
 
         exploredMap = new Map(bot);
-        //exploredMap.setAllUnexplored();
         exploredMap.setAndIncExploredArea();
 
         displayEverything();
@@ -153,13 +151,15 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         //Add input panel
         input_panel = new JPanel(new BorderLayout());
         input_panel.setBorder(new EmptyBorder(50,20,50,20));
-        String comboBoxItems[] = { EXPLORE_PANEL, FFP_PANEL };
+
+        /*String comboBoxItems[] = { EXPLORE_PANEL, FFP_PANEL };
         JComboBox control_switch = new JComboBox(comboBoxItems);
         control_switch.setFont(new Font("Tahoma", Font.BOLD, 16));
         control_switch.setEditable(false);
         control_switch.setActionCommand("switchComboBox");
         control_switch.addActionListener(this);
-        input_panel.add(control_switch, BorderLayout.NORTH);
+        input_panel.add(control_switch, BorderLayout.NORTH);*/
+        
         
 
         // -------------------------Add control panel for exploring.---------------------------
@@ -216,25 +216,35 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         JPanel exploreBtnPane = new JPanel();
         exploreBtnPane.add(exploreBtn);
 
-        JPanel exploreCtrlPane = new JPanel();
-        exploreCtrlPane.add(exploreInputPane);
-        exploreCtrlPane.add(exploreBtnPane);
+        JPanel exploreCtrlPane = new JPanel(new BorderLayout());
+        exploreCtrlPane.setPreferredSize(new Dimension(400,200));
+
+        //exploration label
+        JLabel explr_label = new JLabel("Exploration");
+        explr_label.setFont(new Font("Tahoma", Font.BOLD, 16));
+        exploreCtrlPane.add(explr_label, BorderLayout.NORTH);
+
+        exploreCtrlPane.add(exploreInputPane, BorderLayout.CENTER);
+        exploreCtrlPane.add(exploreBtnPane, BorderLayout.SOUTH);
         exploreCtrlPane.setBorder(new EmptyBorder(20, 20, 20, 20));
 //-------------------------end explore--------------------------------------------
+
+        
 
         //Add control panel for fastest path
         JLabel[] ffpCtrlLabels = new JLabel[2];
         ffp_TextFields = new JTextField[2];
+
          //---------------fastest path button--------------------
         ffpBtn = new JButton("Navigate");   
         if (actualRun) {
             ffpBtn.setEnabled(false);
         } //end if
         else {
-            ffpBtn.setEnabled(true);
             ffpBtn.setActionCommand("FindFastestPath");
             ffpBtn.addActionListener(this);
         }//end else
+
         ffpCtrlLabels[0] = new JLabel("Speed (steps/sec): ");
         ffpCtrlLabels[1] = new JLabel("Time limit (sec): ");
         for (int i = 0; i < 2; i++) {
@@ -258,26 +268,35 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             ffp_TextFields[1].setText("120");
             ffpCtrlLabels[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
             ffp_TextFields[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            //ffp_TextFields[1].getDocument().addDocumentListener(new InitialPositionListener());
             ffp_TextFields[1].getDocument().putProperty("name", "Robot FFP Time Limit");
     }
 
         JPanel ffpBtnPane = new JPanel();
         ffpBtnPane.add(ffpBtn);
 
-        JPanel ffpCtrlPane = new JPanel();
-        ffpCtrlPane.add(ffpInputPane);
-        ffpCtrlPane.add(ffpBtnPane);
+        JPanel ffpCtrlPane = new JPanel(new BorderLayout());
+        ffpCtrlPane.setPreferredSize(new Dimension(400,100));
+
+        //Fastest path label
+        JLabel ftp_label = new JLabel("Fastest Path Navigation");
+        ftp_label.setFont(new Font("Tahoma", Font.BOLD, 16));
+        ffpCtrlPane.add(ftp_label,BorderLayout.NORTH);
+
+        ffpCtrlPane.add(ffpInputPane,BorderLayout.CENTER);
+        ffpCtrlPane.add(ffpBtnPane,BorderLayout.SOUTH);
         ffpCtrlPane.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         
         
         // Add card panel to switch between explore and shortest path panels.
-        JPanel cardPane = new JPanel(new CardLayout());
+        /*JPanel cardPane = new JPanel(new CardLayout());
         cardPane.add(exploreCtrlPane, EXPLORE_PANEL);
         cardPane.add(ffpCtrlPane, FFP_PANEL);
         cardPane.setPreferredSize(new Dimension(280, 300));
-        input_panel.add(cardPane, BorderLayout.EAST);
+        input_panel.add(cardPane, BorderLayout.CENTER);*/
+
+        input_panel.add(exploreCtrlPane,BorderLayout.NORTH);
+        input_panel.add(ffpCtrlPane,BorderLayout.CENTER);
 
         //Add loadmap panel within input panel
         loadmap_panel = new JPanel(new BorderLayout());
@@ -287,7 +306,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         loadmap_TextField = new JTextField();
         if(!actualRun){
         loadmap_TextField.setFont(new Font("Tahoma", Font.PLAIN, 14));
-        loadmap_TextField.setText("Eg. Map2");
+        loadmap_TextField.setText("Map2");
         loadmap_TextField.setFont(new Font("Tahoma", Font.PLAIN, 14));
         loadmap_TextField.getDocument().putProperty("name", "Robot Initial Position");
         }
@@ -309,6 +328,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         loadmap_panel.add(loadBtnPanel, BorderLayout.SOUTH);
         input_panel.add(loadmap_panel,BorderLayout.SOUTH);
 
+
         contentPane.add(input_panel, BorderLayout.EAST);
         contentPane.add(arena_panel, BorderLayout.WEST);
         
@@ -326,7 +346,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         class FastestPath extends SwingWorker<Integer, String> {
             protected Integer doInBackground() throws Exception {
                 bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
-                //exploredMap.repaint();
+                exploredMap.revalidate();
 
                 if (actualRun) {
                     while (true) {
@@ -340,7 +360,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 fastestPath = new FastestPathAlgo(exploredMap, bot);
 
                 fastestPath.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
-                exploredMap.repaint();
+                //exploredMap.repaint();
                 return 222;
             }
         }
@@ -350,6 +370,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         // Exploration Class for Multithreading
         class Exploration extends SwingWorker<Integer, String> {
             protected Integer doInBackground() throws Exception {
+                actualMap.revalidate();
                 int row, col;
                 fastest_ready = true;
                 row = RobotConstants.START_ROW;
@@ -381,12 +402,11 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         // TODO Auto-generated method stub
         String cmd = e.getActionCommand();
-        if(cmd.matches("switchComboBox")){
+        /*if(cmd.matches("switchComboBox")){
             JComboBox cb = (JComboBox) e.getSource();
             JPanel cardPanel = (JPanel) input_panel.getComponent(1);
             switchComboBox(cb, cardPanel);
-
-        }
+        }*/
 
         if(cmd.matches("loadMap")){
             mapNum = loadmap_TextField.getText();
@@ -402,13 +422,13 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             speed = explore_TextFields[0].getText();
             timeLimit = Integer.parseInt(explore_TextFields[2].getText());
             coverageLimit = (int) ((Integer.parseInt(explore_TextFields[1].getText())) * MapConstants.NUM_CELLS / 100.0);
-            loadMap(actualMap, mapNum);
             CardLayout c2 = ((CardLayout) arena_panel.getLayout());
             c2.show(arena_panel, "EXPLORATION");
             new Exploration().execute();
-}
+        }
 
         if(cmd.matches("FindFastestPath")){
+            actualMap.revalidate();
             CardLayout c3 = ((CardLayout) arena_panel.getLayout());
             c3.show(arena_panel, "EXPLORATION");
             new FastestPath().execute();
