@@ -324,7 +324,7 @@ public class FastestPathAlgo {
                 if (explorationMode) {
                     bot.setSensors();
                     bot.sense(this.exploredMap, this.actualMap);
-                    this.exploredMap.repaint();
+                    this.exploredMap.revalidate();
                 }
             }
         } else {
@@ -335,23 +335,23 @@ public class FastestPathAlgo {
                     if (fCount == 10) {
                         bot.moveForwardMultiCell(fCount);
                         fCount = 0;
-                        exploredMap.repaint();
+                        exploredMap.revalidate();
                     }
                 } else if (x == MOVEMENT.RIGHT || x == MOVEMENT.LEFT) {
                     if (fCount > 0) {
                         bot.moveForwardMultiCell(fCount);
                         fCount = 0;
-                        exploredMap.repaint();
+                        exploredMap.revalidate();
                     }
 
                     bot.move(x, true);
-                    exploredMap.repaint();
+                    exploredMap.revalidate();
                 }
             }
 
             if (fCount > 0) {
                 bot.moveForwardMultiCell(fCount);
-                exploredMap.repaint();
+                exploredMap.revalidate();
             }
         }
 
