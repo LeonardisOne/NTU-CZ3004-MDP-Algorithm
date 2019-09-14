@@ -14,6 +14,7 @@ public class Cell {
     private boolean isObstacle;
     private boolean isVirtualWall;
     private boolean isExplored;
+    private int distToNearestUnexplored;
 
     public Cell(int row, int col) {
         this.row = row;
@@ -21,6 +22,7 @@ public class Cell {
         isObstacle = false;
         isVirtualWall = false;
         isExplored = false;
+        distToNearestUnexplored = 0;
     }
 
     public int getRow() {
@@ -63,5 +65,13 @@ public class Cell {
 
     public boolean getIsExplored() {
         return isExplored;
+    }
+
+    public int getDistToNearestUnexplored(){
+        return distToNearestUnexplored;
+    }
+
+    public void setDistToNearestUnexplored(int num){
+        distToNearestUnexplored = num;
     }
 }
