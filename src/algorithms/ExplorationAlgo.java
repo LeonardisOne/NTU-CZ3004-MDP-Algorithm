@@ -1,5 +1,6 @@
 package algorithms;
 
+
 //import java.util.Iterator;
 import java.util.LinkedList;
 //import java.util.Stack;
@@ -135,6 +136,7 @@ public class ExplorationAlgo {
             //}
 
             dfsNodes[currentCell.getRow()][currentCell.getCol()].clear();
+
         }
 
         backToStart();
@@ -413,6 +415,7 @@ public class ExplorationAlgo {
         System.out.println("Explored Area: " + areaExplored);
 
         //explorationLoop(bot.getRobotPosRow(), bot.getRobotPosCol());
+
         doHeuristicExplore();
     }
 
