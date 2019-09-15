@@ -280,7 +280,7 @@ public class FastestPathAlgo {
         ArrayList<MOVEMENT> movements = new ArrayList<>();
 
         Robot tempBot;
-        if(goalRow == 1 && goalCol == 1){
+        if((goalRow == 1 && goalCol == 1)||(goalRow == 18 && goalCol == 13)){
             tempBot = new Robot(bot.getRobotPosRow(), bot.getRobotPosCol(), false, bot.getRobotCurDir());
         }
         else{

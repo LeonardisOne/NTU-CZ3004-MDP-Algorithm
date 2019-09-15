@@ -139,6 +139,7 @@ public class ExplorationAlgo {
 
         }
 
+        goToGoal();
         backToStart();
     }
 
@@ -611,6 +612,13 @@ public class ExplorationAlgo {
             moveBot(MOVEMENT.CALIBRATE);
         }
         turnBotToDir(DIRECTION.NORTH);
+    }
+
+    private void goToGoal(){
+        if (!bot.getReachedGoal()) {
+            FastestPathAlgo goToGoal = new FastestPathAlgo(exploredMap, bot, actualMap);
+            goToGoal.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
+        }
     }
 
     /**
