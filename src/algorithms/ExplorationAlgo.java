@@ -1,8 +1,8 @@
 package algorithms;
 
-import java.util.Iterator;
+//import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Stack;
+//import java.util.Stack;
 import java.util.PriorityQueue;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -35,7 +35,8 @@ public class ExplorationAlgo {
     private boolean calibrationMode;
 
     private LinkedList<Cell>[][] dfsNodes;
-    private Stack<Cell> stack;
+    private int[][] visited;
+    //private Stack<Cell> stack;
 
     public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit) {
         this.exploredMap = exploredMap;
@@ -49,7 +50,11 @@ public class ExplorationAlgo {
                 dfsNodes[row][col] = new LinkedList<Cell>();
             }
         }
-        stack = new Stack<Cell>();
+        visited = new int[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
+        for(int[] row:visited){
+            Arrays.fill(row, 1);
+        }
+        //stack = new Stack<Cell>();
     }
 
     /**
@@ -63,21 +68,19 @@ public class ExplorationAlgo {
         dfsNodes[row][col].add(cell);
     }
 
-    public void doDFS(Cell cell){
+    public void doHeuristicExplore(){
         //stack = new Stack<Cell>();
 
-        int[][] visited = new int[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
-        for(int[] row:visited){
-            Arrays.fill(row, 1);
-        }
+        Cell prevCell = null;
 
-        stack.push(cell);
+        //stack.push(cell);
 
         //Stack<Cell> prevCells = new Stack<Cell>();
 
-        while(!stack.empty() && areaExplored < coverageLimit && System.currentTimeMillis() < endTime){
-            Cell currentCell = stack.pop();
+        while(areaExplored < coverageLimit && System.currentTimeMillis() < endTime){
+            Cell currentCell = exploredMap.getCell(bot.getRobotPosRow(), bot.getRobotPosCol());
             visited[currentCell.getRow()][currentCell.getCol()] *= 2;
+            //visited[currentCell.getRow()][currentCell.getCol()]++;
 
             /* if(!visited[currentCell.getRow()][currentCell.getCol()]){
                 visited[currentCell.getRow()][currentCell.getCol()] = true;
@@ -85,42 +88,20 @@ public class ExplorationAlgo {
 
             getChildCells(currentCell);
 
-            Comparator<Cell> comparator = new UnexploredChildComparator();
-            PriorityQueue<Cell> queue = new PriorityQueue<>(4, comparator);
-
-            for(Cell c : dfsNodes[currentCell.getRow()][currentCell.getCol()]){
-                int temp = c.getDistToNearestUnexplored() + visited[c.getRow()][c.getCol()];
-                switch(compareToGetDir(currentCell, c)){
-                    case LEFT:
-                    case RIGHT:
-                        c.setDistToNearestUnexplored(temp + 2);
-                        break;
-                    case BACKWARD:
-                        c.setDistToNearestUnexplored(temp + 4);
-                        break;
-                    default:
-                        c.setDistToNearestUnexplored(temp);
-                        break;
-                }
-                queue.add(c);
-            }
-
-            dfsNodes[currentCell.getRow()][currentCell.getCol()].clear();
-
-            System.out.println("The queue elements:");
+            /* System.out.println("The queue elements:");
             Iterator<Cell> itr = queue.iterator(); 
             while (itr.hasNext()) {
                 Cell temp = itr.next();
                 System.out.println(temp.getRow() + "," + temp.getCol() + ":" + temp.getDistToNearestUnexplored()); 
-            }
+            } */
 
             //Iterator<Cell> itr = dfsNodes[currentCell.getRow()][currentCell.getCol()].iterator();
 
-            //boolean needBacktrack = false;
+            //boolean needBacktrack = true;
 
-            while(!queue.isEmpty()){
+            //while(!queue.isEmpty()){
                 //Cell childCell = itr.next();
-                Cell childCell = queue.poll();
+                //Cell childCell = queue.poll();
                 //System.out.println("row " + childCell.getRow() + " col " + childCell.getCol() + childHasUnexploredNeighbours(childCell.getRow(), childCell.getCol()));
                 /* if(!visited[childCell.getRow()][childCell.getCol()]){
                     needBacktrack = false;
@@ -128,9 +109,8 @@ public class ExplorationAlgo {
                     System.out.println("row:" + childCell.getRow() + "col:" + childCell.getCol());
                 } */
                 //needBacktrack = false;
-                stack.push(childCell);
-                System.out.println("row:" + childCell.getRow() + "col:" + childCell.getCol());
-            }
+                //stack.push(childCell);
+                //System.out.println("row:" + childCell.getRow() + "col:" + childCell.getCol());}
             
             /* if(needBacktrack){
                 Cell prevCell = prevCells.pop();
@@ -138,22 +118,54 @@ public class ExplorationAlgo {
                 System.out.println("row:" + prevCell.getRow() + "col:" + prevCell.getCol());
             } */
 
-            if(!stack.empty()){
-                Cell nextCell = stack.peek();
+            //if(!queue.isEmpty()){
+                Cell nextCell = getNextCell();
                 MOVEMENT m = compareToGetDir(currentCell, nextCell);
                 nextAction(m);
-                System.out.println("row:" + nextCell.getRow() + "col:" + nextCell.getCol());
+                System.out.println("Next row:" + nextCell.getRow() + "col:" + nextCell.getCol());
                 System.out.println("Area explored: " + areaExplored);
+                if(nextCell.equals(prevCell)){
+                    visited[currentCell.getRow()][currentCell.getCol()] += 100;
+                    System.out.println("dead end");
+                }
+                prevCell = currentCell;
                 /* if(!needBacktrack){
                     prevCells.push(currentCell);
                 } */
-            }
+            //}
+
+            dfsNodes[currentCell.getRow()][currentCell.getCol()].clear();
         }
 
         backToStart();
     }
 
-    private int childHasUnexploredNeighbours(int row, int col, DIRECTION moveDir){
+    private Cell getNextCell(){
+        Comparator<Cell> comparator = new UnexploredChildComparator();
+        PriorityQueue<Cell> queue = new PriorityQueue<>(4, comparator);
+        Cell currentCell = exploredMap.getCell(bot.getRobotPosRow(), bot.getRobotPosCol());
+
+        for(Cell c : dfsNodes[currentCell.getRow()][currentCell.getCol()]){
+            int temp = c.getDistToNearestUnexplored() + visited[c.getRow()][c.getCol()];
+            switch(compareToGetDir(currentCell, c)){
+                case LEFT:
+                case RIGHT:
+                    c.setDistToNearestUnexplored(temp + 2);
+                    break;
+                case BACKWARD:
+                    c.setDistToNearestUnexplored(temp + 4);
+                    break;
+                default:
+                    c.setDistToNearestUnexplored(temp);
+                    break;
+            }
+            queue.add(c);
+        }
+
+        return queue.poll();
+    }
+
+    /* private int childHasUnexploredNeighbours(int row, int col, DIRECTION moveDir){
         int unexploredCount=0;
         int neighbourRow=row;
         int neighbourCol=col;
@@ -208,7 +220,7 @@ public class ExplorationAlgo {
                 break;
         }
         return unexploredCount;
-    }
+    } */
 
     private int calcUnexploredArea(int row, int col){
         int leastDistToUnexplored = 100;
@@ -304,7 +316,7 @@ public class ExplorationAlgo {
         int row = cell.getRow();
         int col = cell.getCol();
         Cell childCell;
-        if(areaExplored < 150){
+        if(areaExplored < 30){
             if(southCanMove()){
                 childCell = exploredMap.getCell(row - 1, col);
                 addNeighbours(row, col, childCell);
@@ -401,7 +413,7 @@ public class ExplorationAlgo {
         System.out.println("Explored Area: " + areaExplored);
 
         //explorationLoop(bot.getRobotPosRow(), bot.getRobotPosCol());
-        doDFS(exploredMap.getCell(bot.getRobotPosRow(), bot.getRobotPosCol()));
+        doHeuristicExplore();
     }
 
     /*
