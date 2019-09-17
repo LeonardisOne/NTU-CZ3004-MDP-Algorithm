@@ -114,7 +114,7 @@ public class Robot {
     /**
      * Takes in a MOVEMENT and change the position and direction of robot.
      */
-    private void changePosOrDir(MOVEMENT m){
+    public void changePosOrDir(MOVEMENT m){
         switch (m) {
             case FORWARD:
                 switch (robotDir) {

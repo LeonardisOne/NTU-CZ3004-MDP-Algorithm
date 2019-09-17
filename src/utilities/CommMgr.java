@@ -20,8 +20,8 @@ public class CommMgr {
     public static final String INSTRUCTIONS = "INSTR";              // PC --> Arduino
     public static final String SENSOR_DATA = "SDATA";               // Arduino --> PC
 
-    public static final String HOST = "192.168.2.1";
-    public static final int PORT = 8008;
+    public static final String HOST = "192.168.3.1";
+    public static final int PORT = 9999;
 
     private static CommMgr commMgr = null;
     private static Socket socket = null;
@@ -85,7 +85,7 @@ public class CommMgr {
     }
 
     public void sendMsg(String msg, String msgType) {
-        //System.out.println("Sending message...");
+        System.out.println("Sending message trytry...");
 
         try {
             String msgToSend;

@@ -15,11 +15,28 @@ import java.awt.*;
 public class Map extends JPanel {
     private final Cell[][] grid;
     private final Robot bot;
+	public int rowToReach = RobotConstants.START_ROW;
+	public  int colToReach = RobotConstants.START_COL;
+    // blocked grid represents the real(explored) map
+    public boolean[][] blocked;
+
+	// explored grid stores the cell status
+    public boolean[][] explored;
+    
+	// grid that the robot center can reach
+    public boolean[][] reachable;
+    
+    
 
     /**
      * Initialises a Map object with a grid of Cell objects.
      */
     public Map(Robot bot) {
+		blocked = new boolean[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
+		explored = new boolean[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
+        reachable = new boolean[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
+        initialize();
+
         this.bot = bot;
 
         grid = new Cell[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
@@ -34,6 +51,79 @@ public class Map extends JPanel {
             }
         }
     }
+
+    //initialize all the rows and coloumns to false
+	public void initialize() {
+		for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
+			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
+				blocked[row][col] = false;
+				explored[row][col] = false;
+				reachable[row][col] = false;
+			}
+		}
+    }
+
+    public void notReachable(int row, int col) {
+		reachable[row][col] = false;
+		if (row == MapConstants.NUM_ROWS - 1) {
+			if (col == MapConstants.NUM_COLS - 1) {
+				reachable[row][col - 1] = false;
+				reachable[row - 1][col] = false;
+				reachable[row - 1][col - 1] = false;
+			} else if (col == 0) {
+				reachable[row][col + 1] = false;
+				reachable[row - 1][col] = false;
+				reachable[row - 1][col + 1] = false;
+			} else {
+				reachable[row][col - 1] = false;
+				reachable[row][col + 1] = false;
+				reachable[row - 1][col] = false;
+				reachable[row - 1][col - 1] = false;
+				reachable[row - 1][col + 1] = false;
+			}
+		} else if (row == 0) {
+			if (col == MapConstants.NUM_COLS - 1) {
+				reachable[row][col - 1] = false;
+				reachable[row + 1][col] = false;
+				reachable[row + 1][col - 1] = false;
+			} else if (col == 0) {
+				reachable[row][col + 1] = false;
+				reachable[row + 1][col] = false;
+				reachable[row + 1][col + 1] = false;
+			} else {
+				reachable[row][col - 1] = false;
+				reachable[row][col + 1] = false;
+				reachable[row + 1][col] = false;
+				reachable[row + 1][col - 1] = false;
+				reachable[row + 1][col + 1] = false;
+			}
+		} else {
+			if (col == MapConstants.NUM_COLS - 1) {
+				reachable[row][col - 1] = false;
+				reachable[row - 1][col] = false;
+				reachable[row - 1][col - 1] = false;
+				reachable[row + 1][col] = false;
+				reachable[row + 1][col - 1] = false;
+			} else if (col == 0) {
+				reachable[row][col + 1] = false;
+				reachable[row - 1][col] = false;
+				reachable[row - 1][col + 1] = false;
+				reachable[row + 1][col] = false;
+				reachable[row + 1][col + 1] = false;
+			} else {
+				reachable[row][col - 1] = false;
+				reachable[row][col + 1] = false;
+				reachable[row - 1][col] = false;
+				reachable[row - 1][col - 1] = false;
+				reachable[row - 1][col + 1] = false;
+				reachable[row + 1][col] = false;
+				reachable[row + 1][col - 1] = false;
+				reachable[row + 1][col + 1] = false;
+			}
+		}
+	}
+
+
 
     /**
      * Returns true if the row and column values are valid.
@@ -80,18 +170,18 @@ public class Map extends JPanel {
     /**
      * Sets all cells in the grid to an explored state.
      */
-    /* public void setAllExplored() {
+    public void setAllExplored() {
         for (int row = 0; row < grid.length; row++) {
             for (int col = 0; col < grid[0].length; col++) {
                 grid[row][col].setIsExplored(true);
             }
         }
-    } */
+    } 
 
     /**
      * Sets all cells in the grid to an unexplored state except for the START & GOAL zone.
      */
-    /* public void setAllUnexplored() {
+    public void setAllUnexplored() {
         for (int row = 0; row < grid.length; row++) {
             for (int col = 0; col < grid[0].length; col++) {
                 if (inStartZone(row, col) || inGoalZone(row, col)) {
@@ -101,7 +191,7 @@ public class Map extends JPanel {
                 }
             }
         }
-    } */
+    } 
 
     /**
      * Sets all cells in the START & GOAL zone to explored.
@@ -168,7 +258,7 @@ public class Map extends JPanel {
         if (col < MapConstants.NUM_COLS - 1) {
             grid[row][col + 1].setVirtualWall(isObstacle);            // right cell
         }
-    }
+    }// end set obstacle cell
 
     /**
      * Returns true if the given cell is out of bounds or an obstacle.
@@ -177,6 +267,13 @@ public class Map extends JPanel {
         return !isCellValid(row, col) || getCell(row, col).getIsObstacle();
     }
 
+	public boolean isBlocked(int row, int col) {
+		if (row >= 0 && row < MapConstants.NUM_ROWS && col >= 0 && col < MapConstants.NUM_COLS) {
+			return blocked[row][col];
+		} else {
+			return true;
+		}
+	}
     /**
      * Overrides JComponent's paintComponent() method. It creates a 2-D array of _DisplayCell objects
      * to store the current map state. Then, it paints the cells for the grid with the appropriate colors as

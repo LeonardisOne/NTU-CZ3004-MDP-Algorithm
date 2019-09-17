@@ -36,10 +36,23 @@ public class MapDescriptor {
 
             String bin = sb.toString();
             int binPtr = 0;
+
+			for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
+				for (int col = 0; col < MapConstants.NUM_COLS; col++) {
+					if (row == 0 || col == 0 || row == MapConstants.NUM_ROWS - 1 || col == MapConstants.NUM_COLS - 1) {
+						map.reachable[row][col] = false;
+					} else {
+						map.reachable[row][col] = true;
+					}
+				}
+			}
             for (int row = MapConstants.NUM_ROWS - 1; row >= 0; row--) {
                 for (int col = 0; col < MapConstants.NUM_COLS; col++) {
-                    if (bin.charAt(binPtr) == '1') 
-                        map.setObstacleCell(row, col, true);
+                    if (bin.charAt(binPtr) == '1'){ 
+                    map.blocked[row][col] = true;
+                    map.setObstacleCell(row, col, true);
+                    map.notReachable(row, col);
+                    }
                     binPtr++;
                 }
             }

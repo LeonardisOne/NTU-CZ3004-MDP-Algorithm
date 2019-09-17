@@ -61,7 +61,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static final String FFP_PANEL = "Find fastest path";
 
     private String mapNum; 
-    private int speed;
+    private static int speed;
     private static JFrame _appFrame = null;         // application JFrame
     private static JFrame main_frame;
     private static JPanel _mapCards = null;         // JPanel for map views
@@ -81,8 +81,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static int timeLimit = 3600;            // time limit in seconds
     private static int coverageLimit = 300;         // coverage limit in number of cells
 
-    private static final CommMgr comm = CommMgr.getCommMgr();
-    private static final boolean actualRun = false;
+    private  static CommMgr comm = CommMgr.getCommMgr();
+    private static boolean actualRun = true;
     private static boolean fastest_ready= false;
 
 
@@ -90,9 +90,10 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
      * Initialises the different maps and displays the application.
      */
     public void start() {
-        if (actualRun) comm.startConnection();
+        if (actualRun) 
+            comm.startConnection();
 
-        bot = new Robot(RobotConstants.START_ROW, RobotConstants.START_COL, actualRun);
+            bot = new Robot(RobotConstants.START_ROW, RobotConstants.START_COL, actualRun);
 
         if (!actualRun) {
             actualMap = new Map(bot);
@@ -111,7 +112,6 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private void displayEverything() {
 
         //initialise the main frame
-        
         
         main_frame = new JFrame();
         main_frame.setTitle("Simulator_Group 3");
@@ -134,7 +134,6 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     }
 
     private void initContent(JPanel contentPane) {
-        
         //Add panel for arena
         arena_panel.setPreferredSize(new Dimension(600,700));
         if (!actualRun) {
@@ -153,15 +152,6 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         input_panel = new JPanel(new BorderLayout());
         input_panel.setBorder(new EmptyBorder(50,20,50,20));
 
-        /*String comboBoxItems[] = { EXPLORE_PANEL, FFP_PANEL };
-        JComboBox control_switch = new JComboBox(comboBoxItems);
-        control_switch.setFont(new Font("Tahoma", Font.BOLD, 16));
-        control_switch.setEditable(false);
-        control_switch.setActionCommand("switchComboBox");
-        control_switch.addActionListener(this);
-        input_panel.add(control_switch, BorderLayout.NORTH);*/
-        
-        
 
         // -------------------------Add control panel for exploring.---------------------------
         JLabel[] exploreCtrlLabels = new JLabel[3];
@@ -170,7 +160,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         //-----------------explore button---------------
         exploreBtn = new JButton("Explore");
         if(actualRun){
-            exploreBtn.setEnabled(false);
+            exploreBtn.setActionCommand("ExploreMaze_actual");
+            exploreBtn.addActionListener(this);
         }
         else{
             exploreBtn.setActionCommand("ExploreMaze");
@@ -199,7 +190,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         if (!actualRun) {
             
             exploreCtrlLabels[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            explore_TextFields[0].setText("10");
+            explore_TextFields[0].setText("30");
             explore_TextFields[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
             explore_TextFields[0].getDocument().putProperty("name", "Robot Explore Speed");
             
@@ -239,7 +230,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
          //---------------fastest path button--------------------
         ffpBtn = new JButton("Navigate");   
         if (actualRun) {
-            ffpBtn.setEnabled(false);
+            ffpBtn.setActionCommand("FindFastestPath_actual");
+            ffpBtn.addActionListener(this);
         } //end if
         else {
             ffpBtn.setActionCommand("FindFastestPath");
@@ -307,7 +299,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         loadmap_TextField = new JTextField();
         if(!actualRun){
         loadmap_TextField.setFont(new Font("Tahoma", Font.PLAIN, 14));
-        loadmap_TextField.setText("Map2");
+        loadmap_TextField.setText("Map3");
         loadmap_TextField.setFont(new Font("Tahoma", Font.PLAIN, 14));
         loadmap_TextField.getDocument().putProperty("name", "Robot Initial Position");
         }
@@ -341,10 +333,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         cardLayout.show(cardPanel, (String) cb.getSelectedItem());
     }//end switchComboBox
 
-
         //----------------------------------------------------------------------------
          // FastestPath Class for Multithreading
-        class FastestPath extends SwingWorker<Integer, String> {
+         static class FastestPath extends SwingWorker<Integer, String> {
             protected Integer doInBackground() throws Exception {
                 bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
                 exploredMap.revalidate();
@@ -367,9 +358,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         }
         //----------------------------------------------------------------------------------
 
-        
         // Exploration Class for Multithreading
-        class Exploration extends SwingWorker<Integer, String> {
+        static class Exploration extends SwingWorker<Integer, String> {
             protected Integer doInBackground() throws Exception {
                 actualMap.revalidate();
                 int row, col;
@@ -384,6 +374,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
 
                 if (actualRun) {
+                    System.out.println("Testing for exploration");
                     CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
                 }
 
@@ -397,17 +388,13 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 return 111;
             }
         }
-        //------------------------------------------------------------
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        CommMgr.getCommMgr().sendMsg("try stuff", CommMgr.ROBOT_START);
+        //------------------------------------------------------------
         // TODO Auto-generated method stub
         String cmd = e.getActionCommand();
-        /*if(cmd.matches("switchComboBox")){
-            JComboBox cb = (JComboBox) e.getSource();
-            JPanel cardPanel = (JPanel) input_panel.getComponent(1);
-            switchComboBox(cb, cardPanel);
-        }*/
 
         if(cmd.matches("loadMap")){
             mapNum = loadmap_TextField.getText();
@@ -428,15 +415,33 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             new Exploration().execute();
         }
 
+        if(cmd.matches("ExploreMaze_actual")){
+            speed = 100 ;
+            timeLimit = 3600;
+            coverageLimit = 100;
+            CardLayout c2 = ((CardLayout) arena_panel.getLayout());
+            c2.show(arena_panel, "EXPLORATION");
+            CommMgr.getCommMgr().sendMsg("ExploreMaze_actual", CommMgr.ROBOT_START);
+            new Exploration().execute();
+        }
+
         if(cmd.matches("FindFastestPath")){
             actualMap.revalidate();
             CardLayout c3 = ((CardLayout) arena_panel.getLayout());
             c3.show(arena_panel, "EXPLORATION");
             new FastestPath().execute();
         }
+
+
+        if(cmd.matches("FindFastestPath_actual")){
+        actualMap.revalidate();
+        CardLayout c3 = ((CardLayout) arena_panel.getLayout());
+        c3.show(arena_panel, "EXPLORATION");
+        new FastestPath().execute();
+        }
     }
     
-public static UIlayout_v2 getInstance() {
+    public static UIlayout_v2 getInstance() {
 		if (instance == null) {
 			instance = new UIlayout_v2();
 		}

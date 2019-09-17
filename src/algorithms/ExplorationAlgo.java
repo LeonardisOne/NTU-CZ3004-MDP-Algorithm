@@ -1,5 +1,5 @@
 package algorithms;
-
+import java.util.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Stack;
@@ -30,17 +30,36 @@ public class ExplorationAlgo {
     private long endTime;
     private int lastCalibrate;
     private boolean calibrationMode;
-
+    private boolean fullExploration = false;
     private LinkedList<Cell>[][] dfsNodes;
     private Stack<Cell> stack;
+    public int row1,col1;
+
+    public int rows[] = new int[300];
+    public int cols[] = new int[300];
+    public int max_row,max_col;
+    public static MOVEMENT preAction = null;
+	public static int instance = 1;
+	public static boolean necessaryFlag = false;
+	public static boolean forwardFlag = false;
+	public static boolean forwardOnceFlag = false;
 
     public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit, int speed) {
+
+        Arrays.fill(rows, 0);
+        Arrays.fill(cols, 0);
+
         this.exploredMap = exploredMap;
         this.actualMap = actualMap;
         this.bot = bot;
         bot.setSpeed(speed);
         this.coverageLimit = coverageLimit;
         this.timeLimit = timeLimit;
+        if(this.coverageLimit==100)
+            fullExploration =true;
+        else
+            fullExploration = false;
+
         dfsNodes = new LinkedList[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
         for(int row=0; row<MapConstants.NUM_ROWS; row++){
             for(int col=0; col<MapConstants.NUM_COLS; col++){
@@ -48,7 +67,9 @@ public class ExplorationAlgo {
             }
         }
         stack = new Stack<Cell>();
-    }
+    }//end constructor
+
+
 
     /**
      * Increment the area explored by 1 when called.
@@ -113,22 +134,6 @@ public class ExplorationAlgo {
         backToStart();
     }
 
-    /* private boolean childHasUnexploredNeighbours(int row, int col){
-        if(exploredMap.isCellValid(row, col - 3)){
-            if(!exploredMap.getCell(row, col - 3).getIsExplored())return true;
-        } 
-        else if(exploredMap.isCellValid(row + 3, col)){
-            if(!exploredMap.getCell(row + 3, col).getIsExplored()) return true;
-        }
-        else if(exploredMap.isCellValid(row, col + 4)){
-            //System.out.println(exploredMap.getCell(row, col + 3).getIsExplored());
-            if(!exploredMap.getCell(row, col + 4).getIsExplored()) {return true;}
-        }
-        else if(exploredMap.isCellValid(row - 3, col)){
-            if(!exploredMap.getCell(row - 3, col).getIsExplored()) return true;
-        }
-        return false;
-    } */
 
     private MOVEMENT compareToGetDir(Cell currentCell, Cell nextCell){
         int rowDiff = nextCell.getRow() - currentCell.getRow();
@@ -228,6 +233,7 @@ public class ExplorationAlgo {
      */
     public void runExploration() {
         boolean actualBot = bot.getActualBot();
+       // trytry();
         if (actualBot) {
             System.out.println("Starting calibration...");
 
@@ -267,11 +273,11 @@ public class ExplorationAlgo {
         System.out.println("Explored Area: " + areaExplored);
         senseAndUpdate();
 
-        //areaExplored = calculateAreaExplored();
+        areaExplored = calculateAreaExplored();
         System.out.println("Explored Area: " + areaExplored);
 
-        //explorationLoop(bot.getRobotPosRow(), bot.getRobotPosCol());
-        doDFS(exploredMap.getCell(bot.getRobotPosRow(), bot.getRobotPosCol()));
+        explorationLoop(bot.getRobotPosRow(), bot.getRobotPosCol());
+        //doDFS(exploredMap.getCell(bot.getRobotPosRow(), bot.getRobotPosCol()));
     }
 
     /*
@@ -280,11 +286,38 @@ public class ExplorationAlgo {
      * 2. areaExplored > coverageLimit
      * 3. System.currentTimeMillis() > endTime
      */
-    /* private void explorationLoop(int r, int c) {
+     private void explorationLoop(int r, int c) {
+        String testing = "";
+        for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
+			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
+                if(actualMap.blocked[row][col])
+                {
+                    testing = testing + "1";
+                }
+                else
+                     testing = testing + "0";
+            }
+            System.out.println(testing);
+            testing="";
+        }
+        String testing2 = "";
+        for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
+			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
+                if(actualMap.reachable[row][col])
+                {
+                    testing2 = testing2 + "1";
+                }
+                else
+                     testing2 = testing2 + "0";
+            }
+            System.out.println(testing2);
+            testing2="";
+        }
+
         do {
             nextAction();
-
-            //areaExplored = calculateAreaExplored();
+            //nextMoveOptimized(exploredMap, bot);
+            areaExplored = calculateAreaExplored();
             System.out.println("Area explored: " + areaExplored);
 
             if (bot.getRobotPosRow() == r && bot.getRobotPosCol() == c) {
@@ -294,13 +327,72 @@ public class ExplorationAlgo {
             }
         } while (areaExplored <= coverageLimit && System.currentTimeMillis() <= endTime);
 
+        String testing1 = "";
+        for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
+			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
+                if(exploredMap.explored[row][col])
+                {
+                    testing1 = testing1 + "1";
+                }
+                else
+                     testing1 = testing1 + "0";
+            }
+            System.out.println(testing1);
+            testing1="";
+        }
+        if(bot.getRobotPosRow() == RobotConstants.START_ROW && bot.getRobotPosCol() == RobotConstants.START_COL && coverageLimit!=100 && fullExploration==false){
+            backToStart();
+            System.out.println("testing 2");
+            checkUnexploredCells();
+            max_row = Arrays.stream(rows).max().getAsInt();
+            max_col = Arrays.stream(cols).max().getAsInt();
+            System.out.println("max row: "+max_row+ "max_col: "+max_col);
+            FastestPathAlgo goToGoal = new FastestPathAlgo(exploredMap, bot, actualMap);
+            goToGoal.runFastestPath(max_row,max_col+1);
+        }
         backToStart();
-    } */
+    } 
+    
+	public static boolean checkReachable(Map map, int row, int col) {
+		return map.reachable[row][col];
+    }
+    
+    //redo exploration when robot in starting position but not 100% coverage
+    public void checkUnexploredCells(){
+        int row_counter = 0;
+        int col_counter = 0;
 
+        for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
+			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
+                //if not explored and is not an obstacle and is reachable
+                if(exploredMap.explored[row][col]==false && actualMap.blocked[row][col]==false && actualMap.reachable[row][col]==true){
+                    row1 = row;
+                    col1 = col;
+                    System.out.println("testing row = "+row1);
+                    System.out.println("testing col = "+col1);
+                    cols[col_counter]=col;
+                    col_counter++;
+                    System.out.println("col_counter"+col_counter);
+
+                    rows[row_counter] = row;
+                    row_counter++;        
+                    System.out.println("row_counter"+row_counter);
+                }
+            }//end inner for-loop
+        }//end outer for-loop
+
+        /*for(int a= 0; a<row_counter; a++){
+            System.out.print(rows[a]+" ");
+        }*/
+    }
+
+    public void forceRestart(){
+
+    }
     /*
      * Determines the next move for the robot and executes it accordingly.
      */
-    /* private void nextAction() {
+     private void nextAction() {
         if (canMoveRight()) {
             moveBot(MOVEMENT.RIGHT);
             if (canMoveForward()) moveBot(MOVEMENT.FORWARD);
@@ -313,7 +405,7 @@ public class ExplorationAlgo {
             moveBot(MOVEMENT.RIGHT);
             moveBot(MOVEMENT.RIGHT);
         }
-    } */
+    } 
 
     private void nextAction(MOVEMENT m) {
 
@@ -344,19 +436,9 @@ public class ExplorationAlgo {
     /*
      * Returns true if the right side of the robot is free to move into.
      */
-    /* private boolean canMoveRight() {
-        /* switch (bot.getRobotCurDir()) {
-            case NORTH:
-                if(eastCanMove()) return 'N';
-            case EAST:
-                if(southCanMove()) return 'E';
-            case SOUTH:
-                if(westCanMove()) return 'S';
-            case WEST:
-                if(northCanMove()) return 'W';
-        }
-        return 'X'; */
-        /* switch(bot.getRobotCurDir()){
+    private boolean canMoveRight() {
+
+        switch(bot.getRobotCurDir()){
             case NORTH:
                 return eastCanMove();
             case EAST:
@@ -367,12 +449,12 @@ public class ExplorationAlgo {
                 return northCanMove();
         }
         return false;
-    } */
+    } 
 
     /*
      * Returns true if the robot is free to move forward.
      */
-    /* private boolean canMoveForward() {
+    private boolean canMoveForward() {
         switch (bot.getRobotCurDir()) {
             case NORTH:
                 return northCanMove();
@@ -384,12 +466,12 @@ public class ExplorationAlgo {
                 return westCanMove();
         }
         return false;
-    } */
+    } 
 
     /*
      * * Returns true if the left side of the robot is free to move into.
      */
-    /* private boolean canMoveLeft() {
+    private boolean canMoveLeft() {
         switch (bot.getRobotCurDir()) {
             case NORTH:
                 return westCanMove();
@@ -401,7 +483,7 @@ public class ExplorationAlgo {
                 return southCanMove();
         }
         return false;
-    } */
+    }
 
     /**
      * Returns true if the robot can move to the north cell.
@@ -492,17 +574,18 @@ public class ExplorationAlgo {
 
     /* Returns the number of cells explored in the grid.
      */
-    /* private int calculateAreaExplored() {
+    private int calculateAreaExplored() {
         int result = 0;
         for (int r = 0; r < MapConstants.NUM_ROWS; r++) {
             for (int c = 0; c < MapConstants.NUM_COLS; c++) {
                 if (exploredMap.getCell(r, c).getIsExplored()) {
+                    exploredMap.explored[r][c] =true;
                     result++;
                 }
             }
         }
         return result;
-    } */
+    } 
 
     /**
      * Moves the bot, repaints the map and calls senseAndUpdate().
