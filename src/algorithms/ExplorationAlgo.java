@@ -39,10 +39,11 @@ public class ExplorationAlgo {
     private int[][] visited;
     //private Stack<Cell> stack;
 
-    public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit) {
+    public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit, int speed) {
         this.exploredMap = exploredMap;
         this.actualMap = actualMap;
         this.bot = bot;
+        bot.setSpeed(speed);
         this.coverageLimit = coverageLimit;
         this.timeLimit = timeLimit;
         dfsNodes = new LinkedList[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
@@ -70,77 +71,33 @@ public class ExplorationAlgo {
     }
 
     public void doHeuristicExplore(){
-        //stack = new Stack<Cell>();
-
         Cell prevCell = null;
-
-        //stack.push(cell);
-
-        //Stack<Cell> prevCells = new Stack<Cell>();
 
         while(areaExplored < coverageLimit && System.currentTimeMillis() < endTime){
             Cell currentCell = exploredMap.getCell(bot.getRobotPosRow(), bot.getRobotPosCol());
             visited[currentCell.getRow()][currentCell.getCol()] *= 2;
-            //visited[currentCell.getRow()][currentCell.getCol()]++;
 
-            /* if(!visited[currentCell.getRow()][currentCell.getCol()]){
-                visited[currentCell.getRow()][currentCell.getCol()] = true;
-            } */
+            findChildCells(currentCell);
 
-            getChildCells(currentCell);
-
-            /* System.out.println("The queue elements:");
-            Iterator<Cell> itr = queue.iterator(); 
-            while (itr.hasNext()) {
-                Cell temp = itr.next();
-                System.out.println(temp.getRow() + "," + temp.getCol() + ":" + temp.getDistToNearestUnexplored()); 
-            } */
-
-            //Iterator<Cell> itr = dfsNodes[currentCell.getRow()][currentCell.getCol()].iterator();
-
-            //boolean needBacktrack = true;
-
-            //while(!queue.isEmpty()){
-                //Cell childCell = itr.next();
-                //Cell childCell = queue.poll();
-                //System.out.println("row " + childCell.getRow() + " col " + childCell.getCol() + childHasUnexploredNeighbours(childCell.getRow(), childCell.getCol()));
-                /* if(!visited[childCell.getRow()][childCell.getCol()]){
-                    needBacktrack = false;
-                    stack.push(childCell);
-                    System.out.println("row:" + childCell.getRow() + "col:" + childCell.getCol());
-                } */
-                //needBacktrack = false;
-                //stack.push(childCell);
-                //System.out.println("row:" + childCell.getRow() + "col:" + childCell.getCol());}
-            
-            /* if(needBacktrack){
-                Cell prevCell = prevCells.pop();
-                stack.push(prevCell);
-                System.out.println("row:" + prevCell.getRow() + "col:" + prevCell.getCol());
-            } */
-
-            //if(!queue.isEmpty()){
-                Cell nextCell = getNextCell();
-                MOVEMENT m = compareToGetDir(currentCell, nextCell);
-                nextAction(m);
-                System.out.println("Next row:" + nextCell.getRow() + "col:" + nextCell.getCol());
-                System.out.println("Area explored: " + areaExplored);
-                if(nextCell.equals(prevCell)){
-                    visited[currentCell.getRow()][currentCell.getCol()] += 100;
-                    System.out.println("dead end");
-                }
-                prevCell = currentCell;
-                /* if(!needBacktrack){
-                    prevCells.push(currentCell);
-                } */
-            //}
+            Cell nextCell = getNextCell();
+            MOVEMENT m = compareToGetDir(currentCell, nextCell);
+            nextAction(m);
+            System.out.println("Next row:" + nextCell.getRow() + "col:" + nextCell.getCol());
+            System.out.println("Area explored: " + areaExplored);
+            if(nextCell.equals(prevCell)){
+                visited[currentCell.getRow()][currentCell.getCol()] += 100;
+                System.out.println("dead end");
+            }
+            prevCell = currentCell;
 
             dfsNodes[currentCell.getRow()][currentCell.getCol()].clear();
 
         }
 
-        goToGoal();
-        backToStart();
+        if(coverageLimit==300 && timeLimit==360){
+            goToGoal();
+            backToStart();
+        }
     }
 
     private Cell getNextCell(){
@@ -162,70 +119,14 @@ public class ExplorationAlgo {
                     c.setDistToNearestUnexplored(temp);
                     break;
             }
+            //System.out.println("row " + c.getRow() + " col " + c.getCol() + "dist:" + c.getDistToNearestUnexplored());
             queue.add(c);
         }
 
         return queue.poll();
     }
 
-    /* private int childHasUnexploredNeighbours(int row, int col, DIRECTION moveDir){
-        int unexploredCount=0;
-        int neighbourRow=row;
-        int neighbourCol=col;
-        switch(moveDir){
-            case NORTH:
-                neighbourRow += 3;
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol - 1)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol - 1).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol + 1)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol + 1).getIsExplored()) unexploredCount++;
-                } 
-                break;
-            case EAST:
-                neighbourCol += 3;
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow - 1, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow - 1, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow + 1, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow + 1, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                break;
-            case SOUTH:
-                neighbourRow -= 3;
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol - 1)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol - 1).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol + 1)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol + 1).getIsExplored()) unexploredCount++;
-                } 
-                break;
-            case WEST:
-                neighbourCol -= 3;
-                if(exploredMap.isCellValid(neighbourRow, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow - 1, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow - 1, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                if(exploredMap.isCellValid(neighbourRow + 1, neighbourCol)){
-                    if(!exploredMap.getCell(neighbourRow + 1, neighbourCol).getIsExplored()) unexploredCount++;
-                } 
-                break;
-        }
-        return unexploredCount;
-    } */
-
-    private int calcUnexploredArea(int row, int col){
+    private int distToNearestUnexplored(int row, int col){
         int leastDistToUnexplored = 100;
         for (int i = 0; i < MapConstants.NUM_ROWS; i++) {
             for (int j = 0; j < MapConstants.NUM_COLS; j++) {
@@ -237,11 +138,89 @@ public class ExplorationAlgo {
                 }
             }
         }
+
+        if(!bot.getReachedGoal()){
+            for(int i=MapConstants.GOAL_ROW-1; i<=MapConstants.GOAL_ROW; i++){
+                for(int j=MapConstants.GOAL_COL-1; j<=MapConstants.GOAL_COL; j++){
+                    int manDist = findManhattanDistance(i, j, row, col);
+                    if(leastDistToUnexplored > manDist){
+                        leastDistToUnexplored = manDist;
+                    }
+                }
+            }
+        }
         return leastDistToUnexplored;
     }
 
     private int findManhattanDistance(int goalRow, int goalCol, int fromRow, int fromCol){
-        return Math.abs(goalRow - fromRow) + Math.abs(goalCol - fromCol);
+        int noOfSteps1=0;
+        int noOfSteps2=0;
+        //route 1
+        if(goalRow > fromRow){
+            noOfSteps1 += findRowDist(fromRow, goalRow, fromCol);
+            if(goalCol > fromCol){
+                noOfSteps1 += findColDist(fromCol, goalCol, goalRow);
+            }
+            else{
+                noOfSteps1 += findColDist(goalCol, fromCol, goalRow);
+            }
+        }
+        else{
+            noOfSteps1 += findRowDist(goalRow, fromRow, fromCol);
+            if(goalCol > fromCol){
+                noOfSteps1 += findColDist(fromCol, goalCol, goalRow);
+            }
+            else{
+                noOfSteps1 += findColDist(goalCol, fromCol, goalRow);
+            }
+        }
+        //route 2
+        if(goalCol > fromCol){
+            noOfSteps2 += findColDist(fromCol, goalCol, fromRow);
+            if(goalRow > fromRow){
+                noOfSteps2 += findRowDist(fromRow, goalRow, goalCol);
+            }
+            else{
+                noOfSteps2 += findRowDist(goalRow, fromRow, goalCol);
+            }
+        }
+        else{
+            noOfSteps2 += findColDist(goalCol, fromCol, fromRow);
+            if(goalRow > fromRow){
+                noOfSteps2 += findRowDist(fromRow, goalRow, goalCol);
+            }
+            else{
+                noOfSteps2 += findRowDist(goalRow, fromRow, goalCol);
+            }
+        }
+        return noOfSteps1<noOfSteps2 ? noOfSteps1:noOfSteps2;
+        //return Math.abs(goalRow - fromRow) + Math.abs(goalCol - fromCol);
+    }
+
+    private int findRowDist(int startRow, int endRow, int fromCol){
+        int noOfSteps = 0;
+        for(int i=startRow; i<endRow; i++){
+            if(exploredMap.getCell(i, fromCol).getIsObstacle()){
+                noOfSteps += 3;
+            }
+            else{
+                noOfSteps++;
+            }
+        }
+        return noOfSteps;
+    }
+
+    private int findColDist(int startCol, int endCol, int fromRow){
+        int noOfSteps = 0;
+        for(int i=startCol; i<endCol; i++){
+            if(exploredMap.getCell(fromRow, i).getIsObstacle()){
+                noOfSteps += 3;
+            }
+            else{
+                noOfSteps++;
+            }
+        }
+        return noOfSteps;
     }
 
     private MOVEMENT compareToGetDir(Cell currentCell, Cell nextCell){
@@ -315,7 +294,7 @@ public class ExplorationAlgo {
         }
     }
 
-    private void getChildCells(Cell cell){
+    private void findChildCells(Cell cell){
         int row = cell.getRow();
         int col = cell.getCol();
         Cell childCell;
@@ -338,31 +317,27 @@ public class ExplorationAlgo {
             }
         }else{
             if(southCanMove()){
-                int noOfUnexploredNeighbours = calcUnexploredArea(row - 1, col);
-                //int noOfUnexploredNeighbours = childHasUnexploredNeighbours(row - 1, col, DIRECTION.SOUTH);
+                int distToNearestUnexplored = distToNearestUnexplored(row - 1, col);
                 childCell = exploredMap.getCell(row - 1, col);
-                childCell.setDistToNearestUnexplored(noOfUnexploredNeighbours);
+                childCell.setDistToNearestUnexplored(distToNearestUnexplored);
                 addNeighbours(row, col, childCell);
             }
             if(westCanMove()){
-                int noOfUnexploredNeighbours = calcUnexploredArea(row, col - 1);
-                //int noOfUnexploredNeighbours = childHasUnexploredNeighbours(row, col - 1, DIRECTION.WEST);
+                int distToNearestUnexplored = distToNearestUnexplored(row, col - 1);
                 childCell = exploredMap.getCell(row, col - 1);
-                childCell.setDistToNearestUnexplored(noOfUnexploredNeighbours);
+                childCell.setDistToNearestUnexplored(distToNearestUnexplored);
                 addNeighbours(row, col, childCell);
             }
             if(northCanMove()){
-                int noOfUnexploredNeighbours = calcUnexploredArea(row + 1, col);
-                //int noOfUnexploredNeighbours = childHasUnexploredNeighbours(row + 1, col, DIRECTION.NORTH);
+                int distToNearestUnexplored = distToNearestUnexplored(row + 1, col);
                 childCell = exploredMap.getCell(row + 1, col);
-                childCell.setDistToNearestUnexplored(noOfUnexploredNeighbours);
+                childCell.setDistToNearestUnexplored(distToNearestUnexplored);
                 addNeighbours(row, col, childCell);
             }
             if(eastCanMove()){
-                int noOfUnexploredNeighbours = calcUnexploredArea(row, col + 1);
-                //int noOfUnexploredNeighbours = childHasUnexploredNeighbours(row, col + 1, DIRECTION.EAST);
+                int distToNearestUnexplored = distToNearestUnexplored(row, col + 1);
                 childCell = exploredMap.getCell(row, col + 1);
-                childCell.setDistToNearestUnexplored(noOfUnexploredNeighbours);
+                childCell.setDistToNearestUnexplored(distToNearestUnexplored);
                 addNeighbours(row, col, childCell);
             }
         }

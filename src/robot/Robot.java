@@ -81,8 +81,17 @@ public class Robot {
     }
 
     private void setReachedGoal() {
-        if (this.getRobotPosRow() == MapConstants.GOAL_ROW && this.getRobotPosCol() == MapConstants.GOAL_COL)
-            reachedGoal = true;
+        if(!reachedGoal){
+            for(int i=MapConstants.GOAL_ROW-1; i<=MapConstants.GOAL_ROW; i++){
+                for(int j=MapConstants.GOAL_COL-1; j<=MapConstants.GOAL_COL; j++){
+                    if (this.getRobotPosRow() == i && this.getRobotPosCol() == j){
+                        reachedGoal = true;
+                    }
+                }
+            }
+        }
+        /* if (this.getRobotPosRow() == MapConstants.GOAL_ROW && this.getRobotPosCol() == MapConstants.GOAL_COL)
+            reachedGoal = true; */
     }
 
     public boolean getReachedGoal() {
