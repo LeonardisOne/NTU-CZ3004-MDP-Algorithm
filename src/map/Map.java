@@ -15,6 +15,7 @@ import java.awt.*;
 public class Map extends JPanel {
     private final Cell[][] grid;
     private final Robot bot;
+    
 	public int rowToReach = RobotConstants.START_ROW;
 	public  int colToReach = RobotConstants.START_COL;
     // blocked grid represents the real(explored) map
@@ -212,7 +213,6 @@ public class Map extends JPanel {
         for (int row = 0; row <= MapConstants.START_ROW; row++) {
             for (int col = 0; col <= MapConstants.START_COL; col++) {
                 grid[row][col].setAndIncIsExplored(true);
-                //grid[MapConstants.GOAL_ROW + 1 - row][MapConstants.GOAL_COL + 1 -col].setAndIncIsExplored(true);
             }
         }
     }

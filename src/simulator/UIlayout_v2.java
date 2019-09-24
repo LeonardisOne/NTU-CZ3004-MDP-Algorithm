@@ -6,6 +6,7 @@ import map.Map;
 import map.MapConstants;
 import robot.Robot;
 import robot.RobotConstants;
+import robot.RobotConstants.MOVEMENT;
 import utilities.CommMgr;
 
 import javax.swing.*;
@@ -23,12 +24,6 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -37,9 +32,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import java.awt.Font;
-
-import javax.swing.JTextField;
-
 import java.awt.FlowLayout;
 
 import static utilities.MapDescriptor.createMapDescriptor;
@@ -66,10 +58,16 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static JFrame main_frame;
     private static JPanel _mapCards = null;         // JPanel for map views
     private static JPanel _buttons = null;          // JPanel for buttons
-
+    private static boolean stop_explore = false;
     private JTextField[] explore_TextFields, ffp_TextFields;
+    private JRadioButton [] speed_RadioButtons = new JRadioButton[5];
+
     private JTextField loadmap_TextField;
-    private JButton exploreBtn, ffpBtn,loadMapButton;
+    private JButton exploreBtn, ffpBtn,loadMapButton,stop_button, resetButton;
+
+    private static JLabel display_coverage;
+    private static JLabel display_timeRemaining;
+
 
     private JPanel arena_panel,input_panel,loadmap_panel;
     private JPanel main_panel;
@@ -82,8 +80,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static int coverageLimit = 300;         // coverage limit in number of cells
 
     private  static CommMgr comm = CommMgr.getCommMgr();
-    private static boolean actualRun = true;
-    private static boolean fastest_ready= false;
+    private static boolean actualRun = false;
 
 
     /**
@@ -153,12 +150,18 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         input_panel.setBorder(new EmptyBorder(50,20,50,20));
 
 
-        // -------------------------Add control panel for exploring.---------------------------
-        JLabel[] exploreCtrlLabels = new JLabel[3];
-        explore_TextFields = new JTextField[3];
+        // -------------------------Add control panel for exploring---------------------------
+        JPanel exploration_main = new JPanel(new BorderLayout());
+        JLabel[] exploreCtrlLabels = new JLabel[2];
+        explore_TextFields = new JTextField[2];
                 
         //-----------------explore button---------------
         exploreBtn = new JButton("Explore");
+        exploreBtn.setPreferredSize(new Dimension(150,30));
+        stop_button = new JButton("Stop Exploration");
+        stop_button.setPreferredSize(new Dimension(150,30));
+        stop_button.setActionCommand("Stop_Exploration");
+        stop_button.addActionListener(this);
         if(actualRun){
             exploreBtn.setActionCommand("ExploreMaze_actual");
             exploreBtn.addActionListener(this);
@@ -168,60 +171,168 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             exploreBtn.addActionListener(this);
         }//end exploreBtn
         
-        exploreCtrlLabels[0] = new JLabel("Speed (steps/sec): ");
-        exploreCtrlLabels[1] = new JLabel("Target coverage (%): ");
-        exploreCtrlLabels[2] = new JLabel("Time limit (sec): ");
-        for (int i = 0; i < 3; i++) {
+        exploreCtrlLabels[0] = new JLabel("Target coverage (%): ");
+        exploreCtrlLabels[1] = new JLabel("Time limit (sec): ");
+        for (int i = 0; i < 2; i++) {
             explore_TextFields[i] = new JTextField(10);
             if (actualRun) {
                 explore_TextFields[i].setEditable(false);
             }
         }
-        
-        JPanel exploreInputPane = new JPanel(new GridLayout(3, 2));
+
+        //add radio buttons for speed
+        JPanel radioButton_panel = new JPanel(new GridLayout(5,2));
+        speed_RadioButtons[0] = new JRadioButton("20");
+        speed_RadioButtons[0].addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                speed = 20;
+                speed_RadioButtons[1].setSelected(false);
+                speed_RadioButtons[2].setSelected(false);
+                speed_RadioButtons[3].setSelected(false);
+                speed_RadioButtons[4].setSelected(false);
+            }
+        });
+
+        speed_RadioButtons[1] = new JRadioButton("40");
+        speed_RadioButtons[1].addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                speed = 40;
+                speed_RadioButtons[0].setSelected(false);
+                speed_RadioButtons[2].setSelected(false);
+                speed_RadioButtons[3].setSelected(false);
+                speed_RadioButtons[4].setSelected(false);
+
+            }
+        });
+
+        speed_RadioButtons[2] = new JRadioButton("60");
+        speed_RadioButtons[2].addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                speed = 60;
+                speed_RadioButtons[1].setSelected(false);
+                speed_RadioButtons[0].setSelected(false);
+                speed_RadioButtons[3].setSelected(false);
+                speed_RadioButtons[4].setSelected(false);
+
+            }
+        });
+
+        speed_RadioButtons[3] = new JRadioButton("80");
+        speed_RadioButtons[3].addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                speed = 80;
+                speed_RadioButtons[1].setSelected(false);
+                speed_RadioButtons[2].setSelected(false);
+                speed_RadioButtons[0].setSelected(false);
+                speed_RadioButtons[4].setSelected(false);
+
+            }
+        });
+
+        speed_RadioButtons[4] = new JRadioButton("100");
+        speed_RadioButtons[4].addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                speed = 100;
+                speed_RadioButtons[1].setSelected(false);
+                speed_RadioButtons[2].setSelected(false);
+                speed_RadioButtons[3].setSelected(false);
+                speed_RadioButtons[0].setSelected(false);
+
+            }
+        });
+
+
+        JLabel[] speed_Labels = new JLabel[5];
+        speed_Labels[0] = new JLabel("    Speed (steps/sec): ");
+        speed_Labels[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        speed_Labels[1] = new JLabel("");
+        speed_Labels[2] = new JLabel("");
+        speed_Labels[3] = new JLabel("");
+        speed_Labels[4] = new JLabel("");
+
+        radioButton_panel.add(speed_Labels[0]);
+        radioButton_panel.add(speed_RadioButtons[0]);
+        radioButton_panel.add(speed_Labels[1]);
+        radioButton_panel.add(speed_RadioButtons[1]);
+        radioButton_panel.add(speed_Labels[2]);
+        radioButton_panel.add(speed_RadioButtons[2]);
+        radioButton_panel.add(speed_Labels[3]);
+        radioButton_panel.add(speed_RadioButtons[3]);
+        radioButton_panel.add(speed_Labels[4]);
+        radioButton_panel.add(speed_RadioButtons[4]);
+
+
+        JLabel explr_label = new JLabel("Exploration");
+        explr_label.setFont(new Font("Tahoma", Font.BOLD, 16));
+        exploration_main.add(explr_label, BorderLayout.NORTH);
+        exploration_main.add(radioButton_panel, BorderLayout.CENTER);
+
+        //end radio buttons portion
+
+        JPanel exploreInputPane = new JPanel(new GridLayout(2, 2));
         
         exploreInputPane.add(exploreCtrlLabels[0]);
         exploreInputPane.add(explore_TextFields[0]);
         exploreInputPane.add(exploreCtrlLabels[1]);
         exploreInputPane.add(explore_TextFields[1]);
-        exploreInputPane.add(exploreCtrlLabels[2]);
-        exploreInputPane.add(explore_TextFields[2]);
+
         
-        if (!actualRun) {
+
             
-            exploreCtrlLabels[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            explore_TextFields[0].setText("30");
-            explore_TextFields[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            explore_TextFields[0].getDocument().putProperty("name", "Robot Explore Speed");
+        exploreCtrlLabels[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        explore_TextFields[0].setText("100");
+        explore_TextFields[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        explore_TextFields[0].getDocument().putProperty("name", "Target Coverage");
+           
+        exploreCtrlLabels[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        explore_TextFields[1].setText("360");
+        explore_TextFields[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        explore_TextFields[1].getDocument().putProperty("name", "Robot Explore Time Limit");
             
-            exploreCtrlLabels[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            explore_TextFields[1].setText("100");
-            explore_TextFields[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            explore_TextFields[1].getDocument().putProperty("name", "Target Coverage");
-            
-            exploreCtrlLabels[2].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            explore_TextFields[2].setText("360");
-            explore_TextFields[2].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            explore_TextFields[2].getDocument().putProperty("name", "Robot Explore Time Limit");
-        }
+
+        
                 
-        JPanel exploreBtnPane = new JPanel();
-        exploreBtnPane.add(exploreBtn);
+        JPanel exploreBtnPane = new JPanel(new BorderLayout());
+        exploreBtnPane.add(exploreBtn,BorderLayout.WEST);
+        exploreBtnPane.add(stop_button,BorderLayout.EAST);
 
         JPanel exploreCtrlPane = new JPanel(new BorderLayout());
         exploreCtrlPane.setPreferredSize(new Dimension(400,200));
 
         //exploration label
-        JLabel explr_label = new JLabel("Exploration");
-        explr_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-        exploreCtrlPane.add(explr_label, BorderLayout.NORTH);
+        //exploreCtrlPane.add(explr_label, BorderLayout.NORTH);
 
         exploreCtrlPane.add(exploreInputPane, BorderLayout.CENTER);
         exploreCtrlPane.add(exploreBtnPane, BorderLayout.SOUTH);
         exploreCtrlPane.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+
+        exploration_main.add(exploreCtrlPane, BorderLayout.SOUTH);
 //-------------------------end explore--------------------------------------------
 
+//add a panel display current coverage% and currently explored map
         
+        JPanel mid_Panel = new JPanel(new BorderLayout());
+        JPanel status_panel = new JPanel(new BorderLayout());
+
+        JPanel statusConsole = new JPanel(new GridLayout(2, 2));
+		statusConsole.setPreferredSize(new Dimension(280, 100));
+        JLabel coverage_progress = new JLabel("Coverage (%): ");
+        coverage_progress.setFont(new Font("Tahoma", Font.PLAIN, 14));
+
+        JLabel time_remaining = new JLabel("Time left (sec): ");
+        time_remaining.setFont(new Font("Tahoma", Font.PLAIN, 14));
+
+        display_coverage = new JLabel("0%");
+        display_timeRemaining = new JLabel("360");
+
+        statusConsole.add(coverage_progress);
+        statusConsole.add(display_coverage);
+        statusConsole.add(time_remaining);
+        statusConsole.add(display_timeRemaining);
+        status_panel.add(statusConsole);
+
+        mid_Panel.add(status_panel,BorderLayout.NORTH);
 
         //Add control panel for fastest path
         JLabel[] ffpCtrlLabels = new JLabel[2];
@@ -277,9 +388,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
         ffpCtrlPane.add(ffpInputPane,BorderLayout.CENTER);
         ffpCtrlPane.add(ffpBtnPane,BorderLayout.SOUTH);
-        ffpCtrlPane.setBorder(new EmptyBorder(20, 20, 20, 20));
+        mid_Panel.add(ffpCtrlPane,BorderLayout.CENTER);
+        mid_Panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        
         
         // Add card panel to switch between explore and shortest path panels.
         /*JPanel cardPane = new JPanel(new CardLayout());
@@ -288,8 +399,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         cardPane.setPreferredSize(new Dimension(280, 300));
         input_panel.add(cardPane, BorderLayout.CENTER);*/
 
-        input_panel.add(exploreCtrlPane,BorderLayout.NORTH);
-        input_panel.add(ffpCtrlPane,BorderLayout.CENTER);
+        input_panel.add(exploration_main,BorderLayout.NORTH);
+        input_panel.add(mid_Panel,BorderLayout.CENTER);
 
         //Add loadmap panel within input panel
         loadmap_panel = new JPanel(new BorderLayout());
@@ -306,15 +417,21 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             
         JPanel loadBtnPanel = new JPanel();
         loadMapButton = new JButton("Load");
+        resetButton = new JButton("Reset Map");
+
         if(actualRun){
             loadMapButton.setEnabled(false);
+            resetButton.setEnabled(false);
         }
         else{
             loadMapButton.setActionCommand("loadMap");
             loadMapButton.addActionListener(this);
+            resetButton.setActionCommand("resetMap");
+            resetButton.addActionListener(this);
         }//end exploreBtn
 
-        loadBtnPanel.add(loadMapButton);
+        loadBtnPanel.add(loadMapButton,BorderLayout.WEST);
+        loadBtnPanel.add(resetButton,BorderLayout.EAST);
         loadmap_console.add(loadmapLabel); 
         loadmap_console.add(loadmap_TextField);
         loadmap_panel.add(loadmap_console, BorderLayout.CENTER);
@@ -328,10 +445,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     } //end initContent
 
 
-    public void switchComboBox(JComboBox cb, JPanel cardPanel) {
-        CardLayout cardLayout = (CardLayout) (cardPanel.getLayout());
-        cardLayout.show(cardPanel, (String) cb.getSelectedItem());
-    }//end switchComboBox
+    
 
         //----------------------------------------------------------------------------
          // FastestPath Class for Multithreading
@@ -361,9 +475,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         // Exploration Class for Multithreading
         static class Exploration extends SwingWorker<Integer, String> {
             protected Integer doInBackground() throws Exception {
-                actualMap.revalidate();
+
                 int row, col;
-                fastest_ready = true;
+
                 row = RobotConstants.START_ROW;
                 col = RobotConstants.START_COL;
 
@@ -372,13 +486,13 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
                 ExplorationAlgo exploration;
                 exploration = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
-
+                
                 if (actualRun) {
-                    System.out.println("Testing for exploration");
                     CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
                 }
 
                 exploration.runExploration();
+               
                 createMapDescriptor(exploredMap);
 
                 if (actualRun) {
@@ -389,12 +503,67 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             }
         }
 
+
+        // TimeExploration Class for Multithreading
+        static class TimeExploration extends SwingWorker<Integer, String> {
+            protected Integer doInBackground() throws Exception {
+                bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
+                exploredMap.revalidate();
+
+                ExplorationAlgo timeExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
+                timeExplo.runExploration();
+
+                createMapDescriptor(exploredMap);
+
+                return 333;
+            }
+        }
+
+        // CoverageExploration Class for Multithreading
+        static class CoverageExploration extends SwingWorker<Integer, String> {
+            protected Integer doInBackground() throws Exception {
+                bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
+                exploredMap.revalidate();
+                System.out.println("doing coverage"+ coverageLimit);
+                ExplorationAlgo coverageExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
+                coverageExplo.runExploration();
+
+                createMapDescriptor(exploredMap);
+
+                return 444;
+            }
+        }
+
+
     @Override
     public void actionPerformed(ActionEvent e) {
-        CommMgr.getCommMgr().sendMsg("try stuff", CommMgr.ROBOT_START);
         //------------------------------------------------------------
         // TODO Auto-generated method stub
         String cmd = e.getActionCommand();
+        
+        if(cmd.matches("resetMap")){
+            bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
+            unSelectspeed();
+            if (!actualRun) {
+                actualMap = new Map(bot);
+                actualMap.setExploredArea();
+            }
+    
+            exploredMap = new Map(bot);
+            exploredMap.setAndIncExploredArea();
+            System.out.println("reseting Map...");
+            if (!actualRun) {
+                arena_panel.add(actualMap, "REAL_MAP");
+            }
+            arena_panel.add(exploredMap, "EXPLORATION");
+    
+            CardLayout cl = ((CardLayout) arena_panel.getLayout());
+            if (!actualRun) {
+                cl.show(arena_panel, "REAL_MAP");
+            } else {
+                cl.show(arena_panel, "EXPLORATION");
+            }        
+        }
 
         if(cmd.matches("loadMap")){
             mapNum = loadmap_TextField.getText();
@@ -405,14 +574,41 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             actualMap.revalidate();
         }
 
+        if(cmd.matches("Stop_Exploration")){
+            stop_explore=true;
+        }
 
         if(cmd.matches("ExploreMaze")){
-            speed = Integer.parseInt(explore_TextFields[0].getText()) ;
-            timeLimit = Integer.parseInt(explore_TextFields[2].getText());
-            coverageLimit = (int) ((Integer.parseInt(explore_TextFields[1].getText())) * MapConstants.NUM_CELLS / 100.0);
-            CardLayout c2 = ((CardLayout) arena_panel.getLayout());
-            c2.show(arena_panel, "EXPLORATION");
-            new Exploration().execute();
+            coverageLimit = (int) ((Integer.parseInt(explore_TextFields[0].getText())) * 300 / 100.0);
+            timeLimit = Integer.parseInt(explore_TextFields[1].getText());
+
+            if(checkSpeedRadio()){
+                if(coverageLimit<0 || coverageLimit > 300){
+                    JOptionPane.showMessageDialog(null, "Invalid Coverage!!");
+                }
+                else if(coverageLimit==300){
+                    CardLayout c2 = ((CardLayout) arena_panel.getLayout());
+                    c2.show(arena_panel, "EXPLORATION");
+                    new Exploration().execute();
+                }
+                else if(timeLimit<0){
+                    System.out.println("testing time limit");
+                    JOptionPane.showMessageDialog(null, "Invalid Time Limit!!");
+                }
+                else if(timeLimit>0 && timeLimit<360){
+                    CardLayout cl = ((CardLayout) arena_panel.getLayout());
+                    cl.show(arena_panel, "EXPLORATION");
+                    new TimeExploration().execute();
+                }
+                else{
+                    new CoverageExploration().execute();
+                    CardLayout coverage = ((CardLayout) arena_panel.getLayout());
+                    coverage.show(arena_panel, "EXPLORATION");
+                }
+            }//end if(checkspeedRadio())
+            else{
+                JOptionPane.showMessageDialog(null, "Please select robot speed!!");
+            }
         }
 
         if(cmd.matches("ExploreMaze_actual")){
@@ -421,7 +617,6 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             coverageLimit = 100;
             CardLayout c2 = ((CardLayout) arena_panel.getLayout());
             c2.show(arena_panel, "EXPLORATION");
-            CommMgr.getCommMgr().sendMsg("ExploreMaze_actual", CommMgr.ROBOT_START);
             new Exploration().execute();
         }
 
@@ -446,7 +641,33 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 			instance = new UIlayout_v2();
 		}
 		return instance;
+    }
+    
+    public boolean checkSpeedRadio(){
+        if(speed_RadioButtons[0].isSelected() ||
+           speed_RadioButtons[1].isSelected() ||
+           speed_RadioButtons[2].isSelected() ||
+           speed_RadioButtons[3].isSelected() ||
+           speed_RadioButtons[4].isSelected()){
+            return true;
+        }
+        else
+            return false;
+    }
+    public void unSelectspeed(){
+        speed_RadioButtons[0].setSelected(false);
+        speed_RadioButtons[1].setSelected(false);
+        speed_RadioButtons[2].setSelected(false);
+        speed_RadioButtons[3].setSelected(false);
+        speed_RadioButtons[4].setSelected(false);
+
+    }
+
+    public void setCoverageUpdate (Float coverage) {
+		display_coverage.setText(String.format("%.1f", coverage));
 	}
 
-
+    public void setTimer (int timeLeft) {
+		display_timeRemaining.setText(Integer.toString(timeLeft));
+	}
 }

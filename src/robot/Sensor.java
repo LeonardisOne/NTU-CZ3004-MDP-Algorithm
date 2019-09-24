@@ -102,7 +102,7 @@ public class Sensor {
 
             if (!exploredMap.isCellValid(row, col)) return;
 
-            exploredMap.getCell(row, col).setAndIncIsExplored(true);
+            exploredMap.getCell(row, col).setIsExplored(true);
 
             if (actualMap.getCell(row, col).getIsObstacle()) {
                 exploredMap.setObstacleCell(row, col, true);
@@ -141,7 +141,7 @@ public class Sensor {
 
             if (!exploredMap.isCellValid(row, col)) continue;
 
-            exploredMap.getCell(row, col).setAndIncIsExplored(true);
+            exploredMap.getCell(row, col).setIsExplored(true);
 
             if (sensorVal == i) {
                 exploredMap.setObstacleCell(row, col, true);
@@ -150,7 +150,7 @@ public class Sensor {
 
             // Override previous obstacle value if front sensors detect no obstacle.
             if (exploredMap.getCell(row, col).getIsObstacle()) {
-                if (name.equals("SRFL") || name.equals("SRFC") || name.equals("SRFR")) {
+                if (name.equals("frontIR_2") || name.equals("frontIR_4") || name.equals("frontIR_5")) {
                     exploredMap.setObstacleCell(row, col, false);
                 } else {
                     break;

@@ -11,6 +11,7 @@ import robot.Robot;
 import robot.RobotConstants;
 import robot.RobotConstants.DIRECTION;
 import robot.RobotConstants.MOVEMENT;
+import simulator.UIlayout_v2;
 import utilities.CommMgr;
 
 /**
@@ -37,12 +38,16 @@ public class ExplorationAlgo {
 
     public int rows[] = new int[300];
     public int cols[] = new int[300];
-    public int max_row,max_col;
+    public int max_row,max_col,min_row,min_col;
     public static MOVEMENT preAction = null;
 	public static int instance = 1;
 	public static boolean necessaryFlag = false;
 	public static boolean forwardFlag = false;
-	public static boolean forwardOnceFlag = false;
+    public static boolean forwardOnceFlag = false;
+    
+    private UIlayout_v2 _ui = new UIlayout_v2();
+    private Float explored_percentage;
+    private int display_timelimit;
 
     public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit, int speed) {
 
@@ -55,18 +60,19 @@ public class ExplorationAlgo {
         bot.setSpeed(speed);
         this.coverageLimit = coverageLimit;
         this.timeLimit = timeLimit;
-        if(this.coverageLimit==100)
+        display_timelimit = timeLimit;
+        if(this.coverageLimit==300)
             fullExploration =true;
         else
             fullExploration = false;
 
-        dfsNodes = new LinkedList[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
+        /*dfsNodes = new LinkedList[MapConstants.NUM_ROWS][MapConstants.NUM_COLS];
         for(int row=0; row<MapConstants.NUM_ROWS; row++){
             for(int col=0; col<MapConstants.NUM_COLS; col++){
                 dfsNodes[row][col] = new LinkedList<Cell>();
             }
         }
-        stack = new Stack<Cell>();
+        stack = new Stack<Cell>();*/
     }//end constructor
 
 
@@ -132,7 +138,7 @@ public class ExplorationAlgo {
         }
 
         backToStart();
-    }
+    }//end DoDFS
 
 
     private MOVEMENT compareToGetDir(Cell currentCell, Cell nextCell){
@@ -233,11 +239,10 @@ public class ExplorationAlgo {
      */
     public void runExploration() {
         boolean actualBot = bot.getActualBot();
-       // trytry();
         if (actualBot) {
             System.out.println("Starting calibration...");
 
-            CommMgr.getCommMgr().receiveMsg();
+            /*CommMgr.getCommMgr().receiveMsg();
             bot.move(MOVEMENT.LEFT, false);
             CommMgr.getCommMgr().receiveMsg();
             bot.move(MOVEMENT.CALIBRATE, false);
@@ -250,7 +255,7 @@ public class ExplorationAlgo {
             CommMgr.getCommMgr().receiveMsg();
             bot.move(MOVEMENT.CALIBRATE, false);
             CommMgr.getCommMgr().receiveMsg();
-            bot.move(MOVEMENT.RIGHT, false);
+            bot.move(MOVEMENT.RIGHT, false);*/
 
             while (true) {
                 System.out.println("Waiting for START_EXPR...");
@@ -270,7 +275,6 @@ public class ExplorationAlgo {
             CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
         }
         //area of start & goal zone
-        System.out.println("Explored Area: " + areaExplored);
         senseAndUpdate();
 
         areaExplored = calculateAreaExplored();
@@ -286,38 +290,19 @@ public class ExplorationAlgo {
      * 2. areaExplored > coverageLimit
      * 3. System.currentTimeMillis() > endTime
      */
-     private void explorationLoop(int r, int c) {
-        String testing = "";
-        for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
-			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
-                if(actualMap.blocked[row][col])
-                {
-                    testing = testing + "1";
-                }
-                else
-                     testing = testing + "0";
-            }
-            System.out.println(testing);
-            testing="";
-        }
-        String testing2 = "";
-        for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
-			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
-                if(actualMap.reachable[row][col])
-                {
-                    testing2 = testing2 + "1";
-                }
-                else
-                     testing2 = testing2 + "0";
-            }
-            System.out.println(testing2);
-            testing2="";
-        }
+    private void explorationLoop(int r, int c) {
+        int []temp_target = new int[2];
 
         do {
             nextAction();
-            //nextMoveOptimized(exploredMap, bot);
+
             areaExplored = calculateAreaExplored();
+            explored_percentage = (float) (areaExplored / 300.0 * 100);
+            _ui.setCoverageUpdate(explored_percentage);
+            display_timelimit--;
+
+            _ui.setTimer(display_timelimit);
+
             System.out.println("Area explored: " + areaExplored);
 
             if (bot.getRobotPosRow() == r && bot.getRobotPosCol() == c) {
@@ -327,67 +312,342 @@ public class ExplorationAlgo {
             }
         } while (areaExplored <= coverageLimit && System.currentTimeMillis() <= endTime);
 
-        String testing1 = "";
-        for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
-			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
-                if(exploredMap.explored[row][col])
-                {
-                    testing1 = testing1 + "1";
-                }
-                else
-                     testing1 = testing1 + "0";
-            }
-            System.out.println(testing1);
-            testing1="";
-        }
-        if(bot.getRobotPosRow() == RobotConstants.START_ROW && bot.getRobotPosCol() == RobotConstants.START_COL && coverageLimit!=100 && fullExploration==false){
+
+        
+        /*if(bot.getRobotPosRow() == RobotConstants.START_ROW && bot.getRobotPosCol() == RobotConstants.START_COL && coverageLimit!=100 && 
+        fullExploration==true && timeLimit==360){
             backToStart();
-            System.out.println("testing 2");
             checkUnexploredCells();
-            max_row = Arrays.stream(rows).max().getAsInt();
-            max_col = Arrays.stream(cols).max().getAsInt();
+
+            int row_len = 0;
+            int col_len = 0;
+            for (int i=0; i<300; i++){
+                if (rows[i] != 0)
+                    row_len++;
+            }
+    
+            for (int i=0; i<300; i++){
+                if (cols[i] != 0)
+                    col_len++;
+            }
+    
+    
+            int [] temp_row = new int[row_len];
+            for (int i=0, j=0; i<300; i++){
+                if (rows[i] != 0) {
+                    temp_row[j] = rows[i];
+                    j++;
+                }
+            }
+    
+            int [] temp_col = new int[col_len];
+            for (int i=0, j=0; i<300; i++){
+                if (cols[i] != 0) {
+                    temp_col[j] = cols[i];
+                    j++;
+                }
+            }
+            //temp_row = Arrays.sort(temp_row);
+            //ArrayUtils.reverse(temp_row);
+
+            max_row = Arrays.stream(temp_row).max().getAsInt();
+            min_row = Arrays.stream(temp_row).min().getAsInt();
+            max_col = Arrays.stream(temp_col).max().getAsInt();
+            min_col = Arrays.stream(temp_col).min().getAsInt();
             System.out.println("max row: "+max_row+ "max_col: "+max_col);
+            System.out.println("min row: "+min_row+ "min_col: "+min_col);
             FastestPathAlgo goToGoal = new FastestPathAlgo(exploredMap, bot, actualMap);
-            goToGoal.runFastestPath(max_row,max_col+1);
-        }
+            goToGoal.runFastestPath(max_row+1,max_col+1);
+            FastestPathAlgo goToGoal2 = new FastestPathAlgo(exploredMap, bot, actualMap);
+            goToGoal2.runFastestPath(min_row-1, min_col-1);
+        }*/
+        System.out.println("Testing if this point is reached");
         backToStart();
+        System.out.println("Testing if can reach end point");
     } 
     
 	public static boolean checkReachable(Map map, int row, int col) {
 		return map.reachable[row][col];
     }
     
+    public void removeZeroes(){
+        int row_len = 0;
+        int col_len = 0;
+        for (int i=0; i<rows.length; i++){
+            if (rows[i] != 0)
+                row_len++;
+        }
+
+        for (int i=0; i<cols.length; i++){
+            if (cols[i] != 0)
+                col_len++;
+        }
+
+
+        int [] temp_row = new int[row_len];
+        for (int i=0, j=0; i<rows.length; i++){
+            if (rows[i] != 0) {
+                temp_row[j] = rows[i];
+                j++;
+            }
+        }
+
+        int [] temp_col = new int[col_len];
+        for (int i=0, j=0; i<cols.length; i++){
+            if (cols[i] != 0) {
+                temp_col[j] = cols[i];
+                j++;
+            }
+        }
+    }
+    public int findMin(int [] a)
+    {
+        int minX = Arrays.stream(a).max().getAsInt();
+        int counter;
+        for(counter=0;counter<300;counter++)
+        {
+            if(a[counter]!=0 && a[counter]<minX)
+            {
+                minX = a[counter];
+            }
+        }
+        System.out.print("min number in given array: "+ minX);
+        return minX;
+    }
+
     //redo exploration when robot in starting position but not 100% coverage
     public void checkUnexploredCells(){
         int row_counter = 0;
         int col_counter = 0;
-
+        
         for (int row = 0; row < MapConstants.NUM_ROWS; row++) {
 			for (int col = 0; col < MapConstants.NUM_COLS; col++) {
                 //if not explored and is not an obstacle and is reachable
-                if(exploredMap.explored[row][col]==false && actualMap.blocked[row][col]==false && actualMap.reachable[row][col]==true){
-                    row1 = row;
-                    col1 = col;
-                    System.out.println("testing row = "+row1);
-                    System.out.println("testing col = "+col1);
+                if(exploredMap.explored[row][col]==false && actualMap.blocked[row][col]==false){
+                    
                     cols[col_counter]=col;
                     col_counter++;
-                    System.out.println("col_counter"+col_counter);
 
                     rows[row_counter] = row;
                     row_counter++;        
-                    System.out.println("row_counter"+row_counter);
                 }
             }//end inner for-loop
         }//end outer for-loop
-
-        /*for(int a= 0; a<row_counter; a++){
-            System.out.print(rows[a]+" ");
-        }*/
     }
 
-    public void forceRestart(){
+    //based on the unexplored grid, this function will decide where to visit
 
+    public int [] newTarget(int[] r, int [] c)
+    {
+        int counter;
+        int size = r.length;
+        int orientation=0, result;
+        int temp_target[] = new int[2];
+        int dummy[] = new int[2];
+        for(counter=0; counter <size; counter++){
+            while(orientation!=5){
+                result = check3x3(3,1,r[counter],c[counter],orientation);
+                orientation++;
+                switch(result){
+                    case 9999:
+                        return dummy;
+                    case 0:{
+                        temp_target[0] = r[counter]+1;
+                        temp_target[1] = c[counter]-2;
+                        return temp_target;
+                    }//end case 0
+                    case 1:{
+                        temp_target[0] = r[counter]+1;
+                        temp_target[1] = c[counter]+2;
+                        return temp_target;
+                    }//end case 1
+                    case 2:{
+                        temp_target[0] = r[counter];
+                        temp_target[1] = c[counter]-2;
+                        return temp_target;
+                    }//end case 2
+                    case 3:{
+                        temp_target[0] = r[counter];
+                        temp_target[1] = c[counter]+2;
+                        return temp_target;
+                    }//end case 3
+                    case 4:{
+                        temp_target[0] = r[counter]-1;
+                        temp_target[1] = c[counter]-2;
+                        return temp_target;
+                    }//end case 4
+                    case 5:{
+                        temp_target[0] = r[counter]-1;
+                        temp_target[1] = c[counter]+2;
+                        return temp_target;
+                    }//end case 5
+                }//end switch(result)
+            }//end while(orientation!=5)
+        }//end for-loop
+        //if reaches this point means there is no way to path to surround explored cell
+        return dummy;
+    }
+
+    //check if 3x3 grid surround the unexplored portion is free
+    public int check3x3(int upper_range, int lower_range, int row, int col, int orientation)
+    {
+        int counter=0;
+        int index=0;
+        int offset = 0;
+        int mid_value = upper_range - lower_range;
+        
+        // to check if 3x3 on left-up side is empty 
+        if(orientation==0)
+        {
+            for(index = 0; index<3;index++)
+            {
+                if(isExploredAndFree(row+index, col-lower_range)){
+                    if(isExploredAndFree(row+index, col-mid_value)){
+                        if(isExploredAndFree(row+index, col-upper_range)){
+                            counter++;
+                        }
+                        else
+                            break;
+                        }
+                    else
+                        break;
+                }
+                else 
+                    break;
+            }
+            //if exit this loop after 3 iterations means the 3x3 on the left side is free
+            if(counter==3)
+                return 0;
+            counter=0;
+        }
+
+        // to check if 3x3 on right-up side is empty
+        else if(orientation==1)
+        {
+            for(index = 0; index<3;index++)
+            {
+                if(isExploredAndFree(row+index, col+lower_range)){
+                    if(isExploredAndFree(row+index, col+mid_value)){
+                        if(isExploredAndFree(row+index, col+upper_range)){
+                            counter++;
+                        }
+                        else
+                            break;
+                        }
+                    else
+                        break;
+                }
+                else 
+                    break;
+            }
+            //if exit this loop after 3 iterations means the 3x3 on the left side is free
+            if(counter==3)
+                return 1;
+            counter=0;
+        }
+
+        // to check if 3x3 on left-mid side is empty
+        else if(orientation==2)
+        {
+            for(index = -1; index<2;index++)
+            {
+                if(isExploredAndFree(row+index, col-lower_range)){
+                    if(isExploredAndFree(row+index, col-mid_value)){
+                        if(isExploredAndFree(row+index, col-upper_range)){
+                            counter++;
+                        }
+                        else
+                            break;
+                        }
+                    else
+                        break;
+                }
+                else 
+                    break;
+            }
+            //if exit this loop after 3 iterations means the 3x3 on the left side is free
+            if(counter==3)
+                return 2;
+            counter=0;
+        }
+
+        //check if right-mid 3x3 is empty
+        else if(orientation==3)
+        {
+            for(index = -1; index<2;index++)
+            {
+                if(isExploredAndFree(row+index, col+lower_range)){
+                    if(isExploredAndFree(row+index, col+mid_value)){
+                        if(isExploredAndFree(row+index, col+upper_range)){
+                            counter++;
+                        }
+                        else
+                            break;
+                        }
+                    else
+                        break;
+                }
+                else 
+                    break;
+            }
+            //if exit this loop after 3 iterations means the 3x3 on the left side is free
+            if(counter==3)
+                return 3;
+            counter=0;
+        }
+
+        //check if left-down 3x3 is empty
+        else if(orientation==4)
+        {
+            for(index = 0; index>-2;index++)
+            {
+                if(isExploredAndFree(row+index, col-lower_range)){
+                    if(isExploredAndFree(row+index, col-mid_value)){
+                        if(isExploredAndFree(row+index, col-upper_range)){
+                            counter++;
+                        }
+                        else
+                            break;
+                        }
+                    else
+                        break;
+                }
+                else 
+                    break;
+            }
+            //if exit this loop after 3 iterations means the 3x3 on the left side is free
+            if(counter==3)
+                return 4;
+            counter=0;
+        }
+
+        //check if right-down 3x3 is empty
+        else if(orientation==5)
+        {
+            for(index = 0; index>-2;index++)
+            {
+                if(isExploredAndFree(row+index, col+lower_range)){
+                    if(isExploredAndFree(row+index, col+mid_value)){
+                        if(isExploredAndFree(row+index, col+upper_range)){
+                            counter++;
+                        }
+                        else
+                            break;
+                        }
+                    else
+                        break;
+                }
+                else 
+                    break;
+            }
+            //if exit this loop after 3 iterations means the 3x3 on the left side is free
+            if(counter==3)
+                return 5;
+            counter=0;
+        }
+
+
+        return 9999;
     }
     /*
      * Determines the next move for the robot and executes it accordingly.
@@ -524,7 +784,7 @@ public class ExplorationAlgo {
     /**
      * Returns the robot to START after exploration and points the bot northwards.
      */
-    private void backToStart() {
+    public void backToStart() {
         if (!bot.getReachedGoal() && coverageLimit == 300 && timeLimit == 3600) {
             FastestPathAlgo goToGoal = new FastestPathAlgo(exploredMap, bot, actualMap);
             goToGoal.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
@@ -534,7 +794,7 @@ public class ExplorationAlgo {
         returnToStart.runFastestPath(RobotConstants.START_ROW, RobotConstants.START_COL);
 
         System.out.println("Exploration complete!");
-        //areaExplored = calculateAreaExplored();
+        areaExplored = calculateAreaExplored();
         System.out.printf("%.2f%% Coverage", (areaExplored / 300.0) * 100.0);
         System.out.println(", " + areaExplored + " Cells");
         System.out.println((System.currentTimeMillis() - startTime) / 1000 + " Seconds");
@@ -574,7 +834,7 @@ public class ExplorationAlgo {
 
     /* Returns the number of cells explored in the grid.
      */
-    private int calculateAreaExplored() {
+    public int calculateAreaExplored() {
         int result = 0;
         for (int r = 0; r < MapConstants.NUM_ROWS; r++) {
             for (int c = 0; c < MapConstants.NUM_COLS; c++) {
@@ -627,7 +887,7 @@ public class ExplorationAlgo {
     private void senseAndUpdate() {
         bot.setSensors();
         bot.sense(exploredMap, actualMap);
-        exploredMap.repaint(1,1,600,700);
+        exploredMap.repaint();
     }
 
     /**

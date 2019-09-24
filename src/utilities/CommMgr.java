@@ -1,8 +1,10 @@
 package utilities;
 
 import java.io.*;
+import java.util.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Communication manager to communicate with the rest of the system via the Raspberry Pi.
@@ -18,7 +20,7 @@ public class CommMgr {
     public static final String ROBOT_POS = "ROBOT_POS";             // PC --> Android
     public static final String ROBOT_START = "ROBOT_START";         // PC --> Arduino
     public static final String INSTRUCTIONS = "INSTR";              // PC --> Arduino
-    public static final String SENSOR_DATA = "SDATA";               // Arduino --> PC
+    public static final String SENSOR_DATA = "dis";               // Arduino --> PC
 
     public static final String HOST = "192.168.3.1";
     public static final int PORT = 9999;
@@ -29,6 +31,8 @@ public class CommMgr {
     private BufferedWriter writer;
     private BufferedReader reader;
 
+    private PrintWriter _toRPi;
+	private Scanner _fromRPi;
     private CommMgr() {
     }
 
@@ -45,7 +49,8 @@ public class CommMgr {
         try {
             socket = new Socket(HOST, PORT);
 
-            writer = new BufferedWriter(new OutputStreamWriter(new BufferedOutputStream(socket.getOutputStream())));
+            //_toRPi = new PrintWriter(socket.getOutputStream());
+            writer = new BufferedWriter(new OutputStreamWriter(new BufferedOutputStream(socket.getOutputStream()),StandardCharsets.UTF_8));
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             System.out.println("Successfully connected!");
@@ -85,7 +90,7 @@ public class CommMgr {
     }
 
     public void sendMsg(String msg, String msgType) {
-        System.out.println("Sending message trytry...");
+        System.out.println("Sending message ...");
 
         try {
             String msgToSend;
@@ -93,10 +98,16 @@ public class CommMgr {
                 msgToSend = msgType + "\n";
             } else if (msgType.equals(MAP_STRING) || msgType.equals(ROBOT_POS)) {
                 msgToSend = msgType + " " + msg + "\n";
-            } else {
+            }
+            else if(msgType.equals(INSTRUCTIONS)){
+                msgToSend = msgType + " " + msg + "\n";
+            } 
+            else {
                 msgToSend = msgType + "\n" + msg + "\n";
             }
 
+            //byte [] encoded_message = convertUTF(msgToSend);
+            //_toRPi.write(msgToSend);
             System.out.println("Sending message:\n" + msgToSend);
             writer.write(msgToSend);
             System.out.println("Message sent!");
@@ -130,7 +141,11 @@ public class CommMgr {
 
         return null;
     }
-
+    
+    public byte[] convertUTF(String  msg) throws UnsupportedEncodingException {
+        byte []temp = msg.getBytes("UTF8");
+        return temp;
+    }
     public boolean isConnected() {
         return socket.isConnected();
     }

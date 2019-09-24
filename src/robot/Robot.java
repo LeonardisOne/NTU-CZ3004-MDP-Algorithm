@@ -31,24 +31,24 @@ public class Robot {
     private boolean reachedGoal;
     private final boolean actualBot;
 
-    public Robot(int row, int col, boolean actualBot) {
+   /* public Robot(int row, int col, boolean actualBot) {
         this(row, col, actualBot, RobotConstants.START_DIR);
-    }
+    }*/
 
-    public Robot(int row, int col, boolean actualBot, DIRECTION dir) {
+    public Robot(int row, int col, boolean actualBot) {
         posRow = row;
         posCol = col;
-        robotDir = dir;
+        robotDir = RobotConstants.START_DIR;
         speed = RobotConstants.SPEED;
 
         this.actualBot = actualBot;
 
-        SRFrontLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, this.robotDir, "SRFL");
-        SRFrontCenter = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol, this.robotDir, "SRFC");
-        SRFrontRight = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol + 1, this.robotDir, "SRFR");
-        SRLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, findNewDir(MOVEMENT.LEFT), "SRL");
-        SRRight = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol + 1, findNewDir(MOVEMENT.RIGHT), "SRR");
-        LRLeft = new Sensor(RobotConstants.SENSOR_LONG_RANGE_L, RobotConstants.SENSOR_LONG_RANGE_H, this.posRow, this.posCol - 1, findNewDir(MOVEMENT.LEFT), "LRL");
+        SRFrontLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, this.robotDir, "frontIR_2");
+        SRFrontCenter = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol, this.robotDir, "frontIR_4");
+        SRFrontRight = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol + 1, this.robotDir, "frontIR_5");
+        SRLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, findNewDir(MOVEMENT.LEFT), "leftIR_1");
+        SRRight = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol + 1, findNewDir(MOVEMENT.RIGHT), "rightIR_3");
+        LRLeft = new Sensor(RobotConstants.SENSOR_LONG_RANGE_L, RobotConstants.SENSOR_LONG_RANGE_H, this.posRow, this.posCol - 1, findNewDir(MOVEMENT.LEFT), "leftIR_6");
     }
 
     public void setRobotPos(int row, int col) {
@@ -82,11 +82,11 @@ public class Robot {
 
     private void setReachedGoal() {
         if (this.getRobotPosRow() == MapConstants.GOAL_ROW && this.getRobotPosCol() == MapConstants.GOAL_COL)
-            reachedGoal = true;
+            this.reachedGoal = true;
     }
 
     public boolean getReachedGoal() {
-        return reachedGoal;
+        return this.reachedGoal;
     }
 
     /**
@@ -97,14 +97,57 @@ public class Robot {
         if (!actualBot) {
             // Emulate real movement by pausing execution.
             try {
+                
                 TimeUnit.MILLISECONDS.sleep(speed);
             } catch (InterruptedException e) {
                 System.out.println("Something went wrong in Robot.move()!");
             }
         }
 
-        changePosOrDir(m);
-
+        //changePosOrDir(m);
+        switch (m) {
+            case FORWARD:
+                switch (robotDir) {
+                    case NORTH:
+                        posRow++;
+                        break;
+                    case EAST:
+                        posCol++;
+                        break;
+                    case SOUTH:
+                        posRow--;
+                        break;
+                    case WEST:
+                        posCol--;
+                        break;
+                }
+                break;
+            case BACKWARD:
+                switch (robotDir) {
+                    case NORTH:
+                        posRow--;
+                        break;
+                    case EAST:
+                        posCol--;
+                        break;
+                    case SOUTH:
+                        posRow++;
+                        break;
+                    case WEST:
+                        posCol++;
+                        break;
+                }
+                break;
+            case RIGHT:
+            case LEFT:
+                robotDir = findNewDir(m);
+                break;
+            case CALIBRATE:
+                break;
+            default:
+                System.out.println("Error in Robot.move()!");
+                break;
+        }//end switch
         if (actualBot) sendMovement(m, sendMoveToAndroid);
         else System.out.println("Move: " + MOVEMENT.print(m));
 
