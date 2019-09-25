@@ -7,6 +7,7 @@ import robot.RobotConstants.MOVEMENT;
 import utilities.CommMgr;
 import utilities.MapDescriptor;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 
@@ -320,19 +321,43 @@ public class Robot {
             LRLeft.sense(explorationMap, actualMap);
         } else {
             int[] result = new int[6];
+            Arrays.fill(result, 0);
+            System.out.println("testing sensor input");
 
             CommMgr comm = CommMgr.getCommMgr();
             String msg = comm.receiveMsg();
+            System.out.println(msg);
             String[] msgArr = msg.split(";");
-
-            if (msgArr[0].equals(CommMgr.SENSOR_DATA)) {
+            System.out.println("msgArr index 0: "+msgArr[0]);
+            System.out.println("msgArr index 1: "+msgArr[1]);
+            System.out.println("msgArr index 2: "+msgArr[2]);
+            System.out.println("msgArr index 2: "+msgArr[6]);
+            /*if (msgArr[0].equals(CommMgr.SENSOR_DATA)) {
                 result[0] = Integer.parseInt(msgArr[1].split("_")[1]);
                 result[1] = Integer.parseInt(msgArr[2].split("_")[1]);
                 result[2] = Integer.parseInt(msgArr[3].split("_")[1]);
                 result[3] = Integer.parseInt(msgArr[4].split("_")[1]);
                 result[4] = Integer.parseInt(msgArr[5].split("_")[1]);
                 result[5] = Integer.parseInt(msgArr[6].split("_")[1]);
-            }
+            }*/
+            int [] temp =new int[6];
+            temp = convertToInt(msgArr);
+    
+            if (msgArr[0].equals(CommMgr.SENSOR_DATA)) {
+                System.out.println("testing assigning to result");
+                result[0] = temp[0];
+                System.out.println("result[0]: "+result[0]);
+                result[1] = temp[1];
+                System.out.println("result[1]: "+result[1]);
+                result[2] = temp[2];
+                System.out.println("result[2]: "+result[2]);
+                result[3] = temp[3];
+                System.out.println("result[3]: "+result[3]);
+                result[4] = temp[4];
+                System.out.println("result[4]: "+result[4]);
+                result[5] = temp[5];
+                System.out.println("result[5]: "+result[5]);
+                }
 
             SRFrontLeft.sense(explorationMap, result[0]);
             SRFrontCenter.sense(explorationMap, result[1]);
@@ -347,4 +372,19 @@ public class Robot {
 
         //return result;
     }
+
+    public int[] convertToInt(String[] input){
+        float[] temp = new float[6];
+
+        for(int i = 0; i<6; i++){
+            temp[i] = Float.parseFloat(input[i+1]);
+        }
+
+        int[] result = new int[6];
+        for(int i = 0; i<6; i++){
+            result[i] = (int)(temp[i]);
+        }
+        return result;
+    }
+   
 }

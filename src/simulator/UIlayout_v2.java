@@ -80,7 +80,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static int coverageLimit = 300;         // coverage limit in number of cells
 
     private  static CommMgr comm = CommMgr.getCommMgr();
-    private static boolean actualRun = false;
+    private static boolean actualRun = true;
 
 
     /**
@@ -444,12 +444,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         
     } //end initContent
 
-
-    
-
-        //----------------------------------------------------------------------------
-         // FastestPath Class for Multithreading
-         static class FastestPath extends SwingWorker<Integer, String> {
+    //----------------------------------------------------------------------------
+        // FastestPath Class for Multithreading
+        static class FastestPath extends SwingWorker<Integer, String> {
             protected Integer doInBackground() throws Exception {
                 bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
                 exploredMap.revalidate();
@@ -498,6 +495,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 if (actualRun) {
                     new FastestPath().execute();
                 }
+                //send robot position
+                //comm.sendMsg(bot.getRobotPosRow() + "," + bot.getRobotPosCol() + "," + RobotConstants.DIRECTION.print(bot.getRobotCurDir()), CommMgr.ROBOT_POS);
 
                 return 111;
             }
@@ -596,9 +595,14 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                     JOptionPane.showMessageDialog(null, "Invalid Time Limit!!");
                 }
                 else if(timeLimit>0 && timeLimit<360){
-                    CardLayout cl = ((CardLayout) arena_panel.getLayout());
-                    cl.show(arena_panel, "EXPLORATION");
-                    new TimeExploration().execute();
+                    if(timeLimit % 1!=0){
+                        JOptionPane.showMessageDialog(null, "Time Limit must be in Integer");
+                    }
+                    else{
+                        CardLayout cl = ((CardLayout) arena_panel.getLayout());
+                        cl.show(arena_panel, "EXPLORATION");
+                        new TimeExploration().execute();
+                    }
                 }
                 else{
                     new CoverageExploration().execute();

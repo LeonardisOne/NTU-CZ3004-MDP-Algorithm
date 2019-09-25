@@ -241,7 +241,6 @@ public class ExplorationAlgo {
         boolean actualBot = bot.getActualBot();
         if (actualBot) {
             System.out.println("Starting calibration...");
-
             /*CommMgr.getCommMgr().receiveMsg();
             bot.move(MOVEMENT.LEFT, false);
             CommMgr.getCommMgr().receiveMsg();
@@ -267,15 +266,17 @@ public class ExplorationAlgo {
         }
 
         System.out.println("Starting exploration...");
-
         startTime = System.currentTimeMillis();
         endTime = startTime + (timeLimit * 1000);
 
         if (actualBot) {
             CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
         }
+
         //area of start & goal zone
+        System.out.println("before senseAndUpdate");
         senseAndUpdate();
+        System.out.println("after senseAndUpdate");
 
         areaExplored = calculateAreaExplored();
         System.out.println("Explored Area: " + areaExplored);
@@ -294,7 +295,9 @@ public class ExplorationAlgo {
         int []temp_target = new int[2];
 
         do {
+            System.out.println("testing before nextAction()");
             nextAction();
+            System.out.println("testing after nextAction()");
 
             areaExplored = calculateAreaExplored();
             explored_percentage = (float) (areaExplored / 300.0 * 100);
@@ -885,8 +888,12 @@ public class ExplorationAlgo {
      * Sets the bot's sensors, processes the sensor data and updates the map by repainting it.
      */
     private void senseAndUpdate() {
+        
         bot.setSensors();
+
+        System.out.println("testing before bot.sense");
         bot.sense(exploredMap, actualMap);
+        System.out.println("testing after bot.sense");
         exploredMap.repaint();
     }
 
