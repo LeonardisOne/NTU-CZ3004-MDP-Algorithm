@@ -80,7 +80,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static int coverageLimit = 300;         // coverage limit in number of cells
 
     private  static CommMgr comm = CommMgr.getCommMgr();
-    private static boolean actualRun = true;
+    private static boolean actualRun = false;
 
 
     /**
