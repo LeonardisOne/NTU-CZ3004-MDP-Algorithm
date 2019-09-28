@@ -18,10 +18,11 @@ public class CommMgr {
     public static final String START_FAST_PATH = "START_FAST_PATH"; // Android --> PC
     public static final String MAP_STRING = "MAP";                  // PC --> Android
     public static final String ROBOT_POS = "ROBOT_POS";             // PC --> Android
+    public static final String ROBOT_STATUS = "ROBOT_STATUS";       //PC --> Android
+    
     public static final String ROBOT_START = "ROBOT_START";         // PC --> Arduino
     public static final String INSTRUCTIONS = "INSTR";              // PC --> Arduino
-    public static final String SENSOR_DATA = "dis";               // Arduino --> PC
-
+    public static final String SENSOR_DATA = "SENSOR_DATA";               // Arduino --> PC
     public static final String HOST = "192.168.3.1";
     public static final int PORT = 9999;
 
@@ -96,8 +97,11 @@ public class CommMgr {
             String msgToSend;
             if (msg == null) {
                 msgToSend = msgType + "\n";
-            } else if (msgType.equals(MAP_STRING) || msgType.equals(ROBOT_POS)) {
+            } else if (msgType.equals(ROBOT_POS)) {
                 msgToSend = msgType + " " + msg + "\n";
+            }
+            else if(msgType.equals(MAP_STRING)){
+                msgToSend = msgType + " " + msg + " ";
             }
             else if(msgType.equals(INSTRUCTIONS)){
                 msgToSend = msgType + " " + msg + "\n";
@@ -142,10 +146,6 @@ public class CommMgr {
         return null;
     }
     
-    public byte[] convertUTF(String  msg) throws UnsupportedEncodingException {
-        byte []temp = msg.getBytes("UTF8");
-        return temp;
-    }
     public boolean isConnected() {
         return socket.isConnected();
     }
