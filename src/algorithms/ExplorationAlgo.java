@@ -1,8 +1,11 @@
 package algorithms;
+
 import java.util.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Stack;
+
+import javax.swing.JOptionPane;
 
 import map.Cell;
 import map.Map;
@@ -31,7 +34,7 @@ public class ExplorationAlgo {
     private long endTime;
     private int lastCalibrate;
     private boolean calibrationMode;
-    private boolean fullExploration = false;
+    private static boolean fullExploration = false;
     private LinkedList<Cell>[][] dfsNodes;
     private Stack<Cell> stack;
     public int row1,col1;
@@ -48,7 +51,7 @@ public class ExplorationAlgo {
     private UIlayout_v2 _ui = new UIlayout_v2();
     private Float explored_percentage;
     private int display_timelimit;
-
+    private boolean runTimer=true;
     public ExplorationAlgo(Map exploredMap, Map actualMap, Robot bot, int coverageLimit, int timeLimit, int speed) {
 
         Arrays.fill(rows, 0);
@@ -60,7 +63,8 @@ public class ExplorationAlgo {
         bot.setSpeed(speed);
         this.coverageLimit = coverageLimit;
         this.timeLimit = timeLimit;
-        display_timelimit = timeLimit;
+        display_timelimit = this.timeLimit;
+        _ui.setTimer(display_timelimit);
         if(this.coverageLimit==300)
             fullExploration =true;
         else
@@ -241,7 +245,6 @@ public class ExplorationAlgo {
         boolean actualBot = bot.getActualBot();
         if (actualBot) {
             System.out.println("Starting calibration...");
-
             /*CommMgr.getCommMgr().receiveMsg();
             bot.move(MOVEMENT.LEFT, false);
             CommMgr.getCommMgr().receiveMsg();
@@ -267,15 +270,21 @@ public class ExplorationAlgo {
         }
 
         System.out.println("Starting exploration...");
-
         startTime = System.currentTimeMillis();
+
         endTime = startTime + (timeLimit * 1000);
+
 
         if (actualBot) {
             CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
         }
+
+        //bot.move(MOVEMENT.FORWARD, false);
+
         //area of start & goal zone
+        System.out.println("before senseAndUpdate");
         senseAndUpdate();
+        System.out.println("after senseAndUpdate");
 
         areaExplored = calculateAreaExplored();
         System.out.println("Explored Area: " + areaExplored);
@@ -292,16 +301,17 @@ public class ExplorationAlgo {
      */
     private void explorationLoop(int r, int c) {
         int []temp_target = new int[2];
+            startTimer();
 
         do {
+            System.out.println("testing before nextAction()");
             nextAction();
+            System.out.println("testing after nextAction()");
 
             areaExplored = calculateAreaExplored();
             explored_percentage = (float) (areaExplored / 300.0 * 100);
             _ui.setCoverageUpdate(explored_percentage);
-            display_timelimit--;
-
-            _ui.setTimer(display_timelimit);
+            
 
             System.out.println("Area explored: " + areaExplored);
 
@@ -311,9 +321,11 @@ public class ExplorationAlgo {
                 }
             }
         } while (areaExplored <= coverageLimit && System.currentTimeMillis() <= endTime);
-
-
-        
+        runTimer=false;
+        if(areaExplored==300)
+            fullExploration=true;
+        else
+            fullExploration=false;
         /*if(bot.getRobotPosRow() == RobotConstants.START_ROW && bot.getRobotPosCol() == RobotConstants.START_COL && coverageLimit!=100 && 
         fullExploration==true && timeLimit==360){
             backToStart();
@@ -361,10 +373,35 @@ public class ExplorationAlgo {
             FastestPathAlgo goToGoal2 = new FastestPathAlgo(exploredMap, bot, actualMap);
             goToGoal2.runFastestPath(min_row-1, min_col-1);
         }*/
+
+
         System.out.println("Testing if this point is reached");
-        backToStart();
+        if(fullExploration==true)
+            backToStart();
         System.out.println("Testing if can reach end point");
-    } 
+    }
+    
+    public void startTimer(){
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask(){
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                display_timelimit--;
+                if(display_timelimit==0){
+                    timer.cancel();
+                }
+
+                if(runTimer==false){
+                    timer.cancel();
+                    return;
+                }
+                _ui.setTimer(display_timelimit);
+                
+            }
+        };
+        timer.scheduleAtFixedRate(task, 1000, 1000);
+}
     
 	public static boolean checkReachable(Map map, int row, int col) {
 		return map.reachable[row][col];
@@ -655,6 +692,8 @@ public class ExplorationAlgo {
      private void nextAction() {
         if (canMoveRight()) {
             moveBot(MOVEMENT.RIGHT);
+            if(timeLimit==1)
+                return;
             if (canMoveForward()) moveBot(MOVEMENT.FORWARD);
         } else if (canMoveForward()) {
             moveBot(MOVEMENT.FORWARD);
@@ -885,8 +924,12 @@ public class ExplorationAlgo {
      * Sets the bot's sensors, processes the sensor data and updates the map by repainting it.
      */
     private void senseAndUpdate() {
+        
         bot.setSensors();
+
+        System.out.println("testing before bot.sense");
         bot.sense(exploredMap, actualMap);
+        System.out.println("testing after bot.sense");
         exploredMap.repaint();
     }
 
