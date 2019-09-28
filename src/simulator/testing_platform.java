@@ -5,37 +5,25 @@ import java.util.*;
 import javax.sound.midi.SysexMessage;
 
 import java.lang.*;
+import java.math.BigInteger;
 
 public class testing_platform{
-    public static void main(String[] arg){
+    public static void main(String[] arg) throws Exception{
         int[] result = new int[6];
         String msg = "SENSOR_DATA;-10.00;-10.00;-10.00;-10.00;-10.00;-10.00;";
-        String[] msgArr = msg.split(";");
-        System.out.println("msgArr index 0: "+msgArr[0]);
-        System.out.println("msgArr index 1: "+msgArr[1]);
-        System.out.println("msgArr index 2: "+msgArr[2]);
-        System.out.println("msgArr index 6: "+msgArr[6]);
-        System.out.println(Float.parseFloat(msgArr[1]));
-
-        int [] temp =new int[6];
-        temp = convertToInt(msgArr);
-
-        if (msgArr[0].equals("SENSOR_DATA")) {
-            result[0] = temp[0];
-            System.out.println("result[0]: "+result[0]);
-            result[1] = temp[1];
-            System.out.println("result[1]: "+result[1]);
-            result[2] = temp[2];
-            System.out.println("result[2]: "+result[2]);
-            result[3] = temp[3];
-            System.out.println("result[3]: "+result[3]);
-            result[4] = temp[4];
-            System.out.println("result[4]: "+result[4]);
-            result[5] = temp[5];
-            System.out.println("result[5]: "+result[5]);
-
-        }
+        String testing = "10.00";
+        String [] trytry =  testing.split("\\.");
+        String a = trytry[0];
+        String b = trytry[1];
+        System.out.println("a: "+ a+" "+b);
+        String s = " INSTR W";
+        byte arr[] = s.getBytes("UTF8");
+        for (byte x: arr) {
+         System.out.print(x+" ");
+      }
     }
+    
+
     public static String removeTrailingZeros(String str){
 		if (str == null){
 		return null;}
@@ -74,5 +62,9 @@ public class testing_platform{
             result[i] = (int)(temp[i]);
         }
         return result;
+    }
+    public static BigInteger testBigint(String temp){
+        BigInteger hexBigIntegerExplored = new BigInteger(temp, 16);
+        return hexBigIntegerExplored;
     }
 }

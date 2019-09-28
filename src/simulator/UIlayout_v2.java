@@ -9,6 +9,7 @@ import robot.RobotConstants;
 import robot.RobotConstants.MOVEMENT;
 import utilities.CommMgr;
 
+import java.lang.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -182,7 +183,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
         //add radio buttons for speed
         JPanel radioButton_panel = new JPanel(new GridLayout(5,2));
-        speed_RadioButtons[0] = new JRadioButton("20");
+        speed_RadioButtons[0] = new JRadioButton("50");
         speed_RadioButtons[0].addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 speed = 20;
@@ -193,7 +194,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             }
         });
 
-        speed_RadioButtons[1] = new JRadioButton("40");
+        speed_RadioButtons[1] = new JRadioButton("25");
         speed_RadioButtons[1].addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 speed = 40;
@@ -205,10 +206,10 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             }
         });
 
-        speed_RadioButtons[2] = new JRadioButton("60");
+        speed_RadioButtons[2] = new JRadioButton("40");
         speed_RadioButtons[2].addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                speed = 60;
+                speed = 25;
                 speed_RadioButtons[1].setSelected(false);
                 speed_RadioButtons[0].setSelected(false);
                 speed_RadioButtons[3].setSelected(false);
@@ -217,10 +218,10 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             }
         });
 
-        speed_RadioButtons[3] = new JRadioButton("80");
+        speed_RadioButtons[3] = new JRadioButton("1");
         speed_RadioButtons[3].addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                speed = 80;
+                speed = 1000;
                 speed_RadioButtons[1].setSelected(false);
                 speed_RadioButtons[2].setSelected(false);
                 speed_RadioButtons[0].setSelected(false);
@@ -229,7 +230,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             }
         });
 
-        speed_RadioButtons[4] = new JRadioButton("100");
+        speed_RadioButtons[4] = new JRadioButton("10");
         speed_RadioButtons[4].addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 speed = 100;
@@ -324,7 +325,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         time_remaining.setFont(new Font("Tahoma", Font.PLAIN, 14));
 
         display_coverage = new JLabel("0%");
-        display_timeRemaining = new JLabel("360");
+        display_timeRemaining = new JLabel("");
 
         statusConsole.add(coverage_progress);
         statusConsole.add(display_coverage);
@@ -535,13 +536,14 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
 
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e){
         //------------------------------------------------------------
         // TODO Auto-generated method stub
         String cmd = e.getActionCommand();
         
         if(cmd.matches("resetMap")){
             bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
+            bot.setRobotDir(RobotConstants.DIRECTION.NORTH);
             unSelectspeed();
             if (!actualRun) {
                 actualMap = new Map(bot);
@@ -578,41 +580,55 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         }
 
         if(cmd.matches("ExploreMaze")){
-            coverageLimit = (int) ((Integer.parseInt(explore_TextFields[0].getText())) * 300 / 100.0);
-            timeLimit = Integer.parseInt(explore_TextFields[1].getText());
-
-            if(checkSpeedRadio()){
-                if(coverageLimit<0 || coverageLimit > 300){
-                    JOptionPane.showMessageDialog(null, "Invalid Coverage!!");
-                }
-                else if(coverageLimit==300){
-                    CardLayout c2 = ((CardLayout) arena_panel.getLayout());
-                    c2.show(arena_panel, "EXPLORATION");
-                    new Exploration().execute();
-                }
-                else if(timeLimit<0){
-                    System.out.println("testing time limit");
-                    JOptionPane.showMessageDialog(null, "Invalid Time Limit!!");
-                }
-                else if(timeLimit>0 && timeLimit<360){
-                    if(timeLimit % 1!=0){
-                        JOptionPane.showMessageDialog(null, "Time Limit must be in Integer");
-                    }
-                    else{
-                        CardLayout cl = ((CardLayout) arena_panel.getLayout());
-                        cl.show(arena_panel, "EXPLORATION");
-                        new TimeExploration().execute();
-                    }
-                }
-                else{
-                    new CoverageExploration().execute();
-                    CardLayout coverage = ((CardLayout) arena_panel.getLayout());
-                    coverage.show(arena_panel, "EXPLORATION");
-                }
-            }//end if(checkspeedRadio())
-            else{
-                JOptionPane.showMessageDialog(null, "Please select robot speed!!");
+            if(!checkDecimal(explore_TextFields[0].getText()) || !checkDecimal(explore_TextFields[1].getText())){
+                JOptionPane.showMessageDialog(null, "Please enter the number in Integer format !!");
             }
+            else{
+                if(explore_TextFields[0].getText().length() != 0 && 
+                explore_TextFields[1].getText().length() != 0){
+                 coverageLimit = (int) ((Integer.parseInt(explore_TextFields[0].getText())) * 300 / 100.0);
+                 timeLimit = Integer.parseInt(explore_TextFields[1].getText());    
+                 if(checkSpeedRadio()){
+                     if(coverageLimit<=0 || coverageLimit > 300 || timeLimit<=0){
+                         JOptionPane.showMessageDialog(null, "Invalid Input!!");
+                     }
+ 
+                     
+                     else if(coverageLimit==300){
+                         CardLayout c2 = ((CardLayout) arena_panel.getLayout());
+                         c2.show(arena_panel, "EXPLORATION");
+                         new Exploration().execute();
+                     }
+                     
+                     else if(timeLimit>0 && timeLimit<360){
+                         if(timeLimit % 1!=0){
+                             JOptionPane.showMessageDialog(null, "Time Limit must be in Integer");
+                         }
+                         else{
+                             CardLayout cl = ((CardLayout) arena_panel.getLayout());
+                             cl.show(arena_panel, "EXPLORATION");
+                             new TimeExploration().execute();
+                         }
+                     }
+                     else{
+                         new CoverageExploration().execute();
+                         CardLayout coverage = ((CardLayout) arena_panel.getLayout());
+                         coverage.show(arena_panel, "EXPLORATION");
+                     }
+                 }//end if(checkspeedRadio())
+                 else{
+                     JOptionPane.showMessageDialog(null, "Please select robot speed!!");
+                 }    
+             }
+             else{
+                 if(explore_TextFields[0].getText().length() ==0){
+                     JOptionPane.showMessageDialog(null, "Please enter the coverage % !!");
+                 }
+                 if(explore_TextFields[1].getText().length() ==0){
+                     JOptionPane.showMessageDialog(null, "Please enter the time limit !!");
+                 }
+             }
+             }
         }
 
         if(cmd.matches("ExploreMaze_actual")){
@@ -673,5 +689,13 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
     public void setTimer (int timeLeft) {
 		display_timeRemaining.setText(Integer.toString(timeLeft));
-	}
+    }
+    public boolean checkDecimal(String s){
+        String [] temp = s.split("\\.");
+        if(temp.length>1){
+            return false;
+        }
+        else
+            return true;
+    }
 }
