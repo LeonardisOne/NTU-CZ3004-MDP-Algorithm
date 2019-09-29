@@ -1,5 +1,6 @@
 package utilities;
 
+//import utilities.sendToandroid;
 import java.io.*;
 import java.util.*;
 import java.net.Socket;
@@ -25,13 +26,15 @@ public class CommMgr {
     public static final String SENSOR_DATA = "SENSOR_DATA";               // Arduino --> PC
     public static final String HOST = "192.168.3.1";
     public static final int PORT = 9999;
-
+    public String statusString="";
     private static CommMgr commMgr = null;
     private static Socket socket = null;
 
     private BufferedWriter writer;
     private BufferedReader reader;
 
+   // private sendToandroid sendAndroid = sendToandroid.getInstance();
+    
     private PrintWriter _toRPi;
 	private Scanner _fromRPi;
     private CommMgr() {
@@ -92,17 +95,34 @@ public class CommMgr {
 
     public void sendMsg(String msg, String msgType) {
         System.out.println("Sending message ...");
-
+        String mapString="",robotString="";
         try {
             String msgToSend;
             if (msg == null) {
                 msgToSend = msgType + "\n";
-            } else if (msgType.equals(ROBOT_POS)) {
-                msgToSend = msgType + " " + msg + "\n";
+            }
+            else if(msgType.equals(ROBOT_STATUS)){
+                System.out.println("testing if reach status point here");
+                statusString = msg;
+                msgToSend = "\n";
+            }
+            else if(msgType.equals(ROBOT_POS) || msgType.equals(MAP_STRING)) {
+                if(msgType.equals(ROBOT_POS)){
+                    robotString = msg;
+                }
+                if(msgType.equals(MAP_STRING)){
+                    mapString = msg;
+                }
+                System.out.println("printing status string: "+ statusString);
+                msgToSend = sendToAndroid(mapString, robotString, statusString);
+            }
+            /*else if (msgType.equals(ROBOT_POS)) {
+                //msgToSend = msgType + " " + msg + "\n";
+
             }
             else if(msgType.equals(MAP_STRING)){
                 msgToSend = msgType + " " + msg + " ";
-            }
+            }*/
             else if(msgType.equals(INSTRUCTIONS)){
                 msgToSend = msgType + " " + msg + "\n";
             } 
@@ -146,7 +166,48 @@ public class CommMgr {
         return null;
     }
     
-    public boolean isConnected() {
+    public boolean isConnected(String msgType, String msg) {
         return socket.isConnected();
+    }
+    public String sendToAndroid(String mapString,String robotString, String statusString){
+        String map = "\"map\":";
+        String explored = "\"explored\":";
+        String length = "\"length\":300,";
+        String obstacle = "\"obstacle\":";
+        String robot = "\"robot\":";
+        String status = "\"status\":";
+        String map_e = "",map_obs="";
+        String mapToSend="";
+        String robotToSend="";
+        String statusToSend="";
+        String robot_row="",robot_col="", robot_dir="";
+        if(mapString.length()!=0)  {
+            String [] temp = mapString.split(" ");
+            map_e = temp[0];
+            map_obs = temp[1];
+            mapToSend = map+"[{"+explored+"\""+ map_e +"\","+length+obstacle+"\""+map_obs+"\""+"}]";
+        }
+        
+        if(robotString.length()!=0){
+            String [] temp1 = robotString.split(" ");
+            robot_row = temp1[0];
+            robot_col = temp1[1];
+            robot_dir = temp1[2];
+            robotToSend = robot+"[{"+"\"x\":"+ robot_row + "," + "\"y\":" + robot_col + ","+ "\"direction\":"+ "\"" + robot_dir+"\"}],";
+        }
+        
+
+
+        statusToSend = status+"[{"+status+"\""+statusString+"\""+"}]";
+
+        String finalString ="";
+        if(mapString.length()==0){
+            finalString = "{"+robotToSend+statusToSend+"}";
+        }
+        else if(robotString.length()==0){
+            finalString = "{"+mapToSend+"}";
+        }
+        
+        return finalString;
     }
 }

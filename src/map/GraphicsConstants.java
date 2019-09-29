@@ -13,6 +13,7 @@ class GraphicsConstants {
 
     public static final Color C_START = Color.GREEN;
     public static final Color C_GOAL = Color.RED;
+    public static final Color C_waypoint = Color.GREEN;
     public static final Color C_UNEXPLORED = Color.LIGHT_GRAY;
     public static final Color C_FREE = Color.WHITE;
     public static final Color C_OBSTACLE = Color.BLACK;

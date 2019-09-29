@@ -37,7 +37,7 @@ public class FastestPathAlgo {
     private final Map actualMap;
     private int loopCounter;
     private boolean explorationMode;
-
+    private DIRECTION prevDirection;
     public FastestPathAlgo(Map exploredMap, Robot bot) {
         this.actualMap = null;
         initObject(exploredMap, bot);
@@ -174,14 +174,13 @@ public class FastestPathAlgo {
      */
     public String runFastestPath(int goalRow, int goalCol) {
         System.out.println("Calculating fastest path from (" + current.getRow() + ", " + current.getCol() + ") to goal (" + goalRow + ", " + goalCol + ")...");
-
+        
         Stack<Cell> path;
         do {
             loopCounter++;
 
             // Get cell with minimum cost from toVisit and assign it to current.
             current = minCostCell(goalRow, goalCol);
-
             // Point the robot in the direction of current from the previous cell.
             if (parents.containsKey(current)) {
                 curDir = getTargetDir(parents.get(current).getRow(), parents.get(current).getCol(), curDir, current);
@@ -244,8 +243,8 @@ public class FastestPathAlgo {
                     }
                 }
             }
+            prevDirection = bot.getRobotCurDir();
         } while (!toVisit.isEmpty());
-
         System.out.println("Path not found!");
         return null;
     }
@@ -279,15 +278,17 @@ public class FastestPathAlgo {
 
         ArrayList<MOVEMENT> movements = new ArrayList<>();
 
-        /*Robot tempBot;
-        if(goalRow == 1 && goalCol == 1){
-            tempBot = new Robot(bot.getRobotPosRow(), bot.getRobotPosCol(), false);
+        Robot tempBot;
+        if(goalRow == RobotConstants.GOAL_ROW && goalCol == RobotConstants.GOAL_COL){
+            tempBot = new Robot(bot.getWP_row(), bot.getWP_col(), false);
+            tempBot.setRobotDir(prevDirection);
         }
         else{
             tempBot = new Robot(1, 1, false);
-        }*/
-        Robot tempBot = new Robot(1, 1, false);
+        }
+        //Robot tempBot = new Robot(1, 1, false);
         tempBot.setSpeed(0);
+        System.out.println("temp bot row:"+tempBot.getRobotPosRow()+" col: "+ tempBot.getRobotPosCol() );
         while ((tempBot.getRobotPosRow() != goalRow) || (tempBot.getRobotPosCol() != goalCol)) {
             if (tempBot.getRobotPosRow() == temp.getRow() && tempBot.getRobotPosCol() == temp.getCol()) {
                 temp = path.pop();

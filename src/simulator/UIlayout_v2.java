@@ -6,6 +6,7 @@ import map.Map;
 import map.MapConstants;
 import robot.Robot;
 import robot.RobotConstants;
+import robot.RobotConstants.DIRECTION;
 import robot.RobotConstants.MOVEMENT;
 import utilities.CommMgr;
 
@@ -61,10 +62,12 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static JPanel _buttons = null;          // JPanel for buttons
     private static boolean stop_explore = false;
     private JTextField[] explore_TextFields, ffp_TextFields;
+    private static int wp_row = RobotConstants.GOAL_ROW; 
+    private static int wp_col = RobotConstants.GOAL_COL;
     private JRadioButton [] speed_RadioButtons = new JRadioButton[5];
 
     private JTextField loadmap_TextField;
-    private JButton exploreBtn, ffpBtn,loadMapButton,stop_button, resetButton;
+    private JButton exploreBtn, ffpBtn,load_wp,loadMapButton,stop_button, resetButton;
 
     private static JLabel display_coverage;
     private static JLabel display_timeRemaining;
@@ -341,6 +344,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
          //---------------fastest path button--------------------
         ffpBtn = new JButton("Navigate");   
+        load_wp = new JButton("Load way point");
+        load_wp.setActionCommand("Load_waypoint");
+        load_wp.addActionListener(this);
         if (actualRun) {
             ffpBtn.setActionCommand("FindFastestPath_actual");
             ffpBtn.addActionListener(this);
@@ -350,8 +356,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             ffpBtn.addActionListener(this);
         }//end else
 
-        ffpCtrlLabels[0] = new JLabel("Speed (steps/sec): ");
-        ffpCtrlLabels[1] = new JLabel("Time limit (sec): ");
+        ffpCtrlLabels[0] = new JLabel("row: ");
+        ffpCtrlLabels[1] = new JLabel("col: ");
         for (int i = 0; i < 2; i++) {
             ffp_TextFields[i] = new JTextField(10);
             if (actualRun) {
@@ -365,25 +371,24 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         ffpInputPane.add(ffpCtrlLabels[1]);
         ffpInputPane.add(ffp_TextFields[1]);
         
-        if (!actualRun) {
-            ffpCtrlLabels[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            ffp_TextFields[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            ffp_TextFields[0].setEditable(false);
+        ffp_TextFields[0].setText("10");
+        ffpCtrlLabels[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        ffp_TextFields[0].setFont(new Font("Tahoma", Font.PLAIN, 14));
     
-            ffp_TextFields[1].setText("120");
-            ffpCtrlLabels[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            ffp_TextFields[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
-            ffp_TextFields[1].getDocument().putProperty("name", "Robot FFP Time Limit");
-    }
+        ffp_TextFields[1].setText("7");
+        ffpCtrlLabels[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        ffp_TextFields[1].setFont(new Font("Tahoma", Font.PLAIN, 14));
+        ffp_TextFields[1].getDocument().putProperty("name", "Robot FFP Time Limit");
 
         JPanel ffpBtnPane = new JPanel();
-        ffpBtnPane.add(ffpBtn);
+        ffpBtnPane.add(ffpBtn,BorderLayout.WEST);
+        ffpBtnPane.add(load_wp,BorderLayout.EAST);
 
         JPanel ffpCtrlPane = new JPanel(new BorderLayout());
         ffpCtrlPane.setPreferredSize(new Dimension(400,100));
 
         //Fastest path label
-        JLabel ftp_label = new JLabel("Fastest Path Navigation");
+        JLabel ftp_label = new JLabel("Fastest Path Navigation: Input way point");
         ftp_label.setFont(new Font("Tahoma", Font.BOLD, 16));
         ffpCtrlPane.add(ftp_label,BorderLayout.NORTH);
 
@@ -462,8 +467,20 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
                 FastestPathAlgo fastestPath;
                 fastestPath = new FastestPathAlgo(exploredMap, bot);
+                fastestPath.runFastestPath(wp_row, wp_col);
+                DIRECTION temp = bot.getRobotCurDir();
+                FastestPathAlgo _2ndRun;
+                //bot.setRobotPos(wp_row, wp_col);
+                //bot.setRobotDir(temp);
+                _2ndRun = new FastestPathAlgo(exploredMap, bot);
+                _2ndRun.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
 
-                fastestPath.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
+                /*if(wp_row!=RobotConstants.GOAL_ROW && wp_col!=RobotConstants.GOAL_COL){
+                    fastestPath.runFastestPath(wp_row, wp_col);
+                    fastestPath.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
+                }
+                else
+                    fastestPath.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);*/
                 //exploredMap.repaint();
                 return 222;
             }
@@ -488,7 +505,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 if (actualRun) {
                     CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
                 }
-
+                
                 exploration.runExploration();
                
                 createMapDescriptor(exploredMap);
@@ -497,7 +514,6 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                     new FastestPath().execute();
                 }
                 //send robot position
-                //comm.sendMsg(bot.getRobotPosRow() + "," + bot.getRobotPosCol() + "," + RobotConstants.DIRECTION.print(bot.getRobotCurDir()), CommMgr.ROBOT_POS);
 
                 return 111;
             }
@@ -545,6 +561,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
             bot.setRobotDir(RobotConstants.DIRECTION.NORTH);
             unSelectspeed();
+            wp_row = 1;
+            wp_col = 1;
+            bot.setWaypoint(wp_row,wp_col);
             if (!actualRun) {
                 actualMap = new Map(bot);
                 actualMap.setExploredArea();
@@ -633,13 +652,20 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
         if(cmd.matches("ExploreMaze_actual")){
             speed = 100 ;
-            timeLimit = 3600;
+            timeLimit = 360;
             coverageLimit = 100;
             CardLayout c2 = ((CardLayout) arena_panel.getLayout());
             c2.show(arena_panel, "EXPLORATION");
             new Exploration().execute();
         }
 
+        if(cmd.matches("Load_waypoint")){
+            wp_row = (int)(Integer.parseInt(ffp_TextFields[0].getText()));
+            wp_col = (int)(Integer.parseInt(ffp_TextFields[1].getText()));
+            bot.setWaypoint(wp_row,wp_col);
+            System.out.println("Waypoint loaded !!!");
+            actualMap.repaint();
+        }
         if(cmd.matches("FindFastestPath")){
             actualMap.revalidate();
             CardLayout c3 = ((CardLayout) arena_panel.getLayout());

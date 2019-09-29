@@ -9,8 +9,8 @@ import algorithms.ExplorationAlgo;
  */
 
 public class Cell {
-    private final int row;
-    private final int col;
+    private  int row;
+    private  int col;
     private boolean isObstacle;
     private boolean isVirtualWall;
     private boolean isExplored;
@@ -31,6 +31,10 @@ public class Cell {
         return col;
     }
 
+    public void setCurrent(int row,int col){
+        this.row = row;
+        this.col = col;
+    }
     public void setIsObstacle(boolean val) {
         isObstacle = val;
     }

@@ -3,12 +3,14 @@ package simulator;
 import java.util.*;
 
 import javax.sound.midi.SysexMessage;
-
+import utilities.CommMgr;
 import java.lang.*;
 import java.math.BigInteger;
 
 public class testing_platform{
     public static void main(String[] arg) throws Exception{
+        CommMgr temp = CommMgr.getCommMgr();
+        //temp.sendToAndroid();
         int[] result = new int[6];
         String msg = "SENSOR_DATA;-10.00;-10.00;-10.00;-10.00;-10.00;-10.00;";
         String testing = "10.00";

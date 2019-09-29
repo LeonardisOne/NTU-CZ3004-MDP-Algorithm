@@ -270,6 +270,9 @@ public class ExplorationAlgo {
         }
 
         System.out.println("Starting exploration...");
+        bot.setRobotStatus(true);
+        CommMgr.getCommMgr().sendMsg(bot.getRobotStatus(), CommMgr.ROBOT_STATUS);
+
         startTime = System.currentTimeMillis();
 
         endTime = startTime + (timeLimit * 1000);
@@ -312,7 +315,7 @@ public class ExplorationAlgo {
             explored_percentage = (float) (areaExplored / 300.0 * 100);
             _ui.setCoverageUpdate(explored_percentage);
             
-
+            
             System.out.println("Area explored: " + areaExplored);
 
             if (bot.getRobotPosRow() == r && bot.getRobotPosCol() == c) {
@@ -321,6 +324,8 @@ public class ExplorationAlgo {
                 }
             }
         } while (areaExplored <= coverageLimit && System.currentTimeMillis() <= endTime);
+        bot.setRobotStatus(false);
+        CommMgr.getCommMgr().sendMsg(bot.getRobotStatus(), CommMgr.ROBOT_STATUS);
         runTimer=false;
         if(areaExplored==300)
             fullExploration=true;

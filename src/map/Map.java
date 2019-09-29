@@ -273,7 +273,11 @@ public class Map extends JPanel {
 		} else {
 			return true;
 		}
-	}
+    }
+    //paint waypoint
+    public void paintWP(int row, int col){
+        Color wp_color = GraphicsConstants.C_waypoint;
+    }
     /**
      * Overrides JComponent's paintComponent() method. It creates a 2-D array of _DisplayCell objects
      * to store the current map state. Then, it paints the cells for the grid with the appropriate colors as
@@ -311,7 +315,14 @@ public class Map extends JPanel {
 
             }
         }
-
+        //paint waypoint
+        g.setColor(GraphicsConstants.C_waypoint);
+        int wp_row = bot.getWP_row();
+        int wp_col = bot.getWP_col();
+        if(wp_row!=1 && wp_col!=1)
+            g.fillRect(_mapCells[wp_row][wp_col].cellX + GraphicsConstants.MAP_X_OFFSET, _mapCells[wp_row][wp_col].cellY, _mapCells[wp_row][wp_col].cellSize, _mapCells[wp_row][wp_col].cellSize);
+            
+        
         // Paint the robot on-screen.
         g.setColor(GraphicsConstants.C_ROBOT);
         int r = bot.getRobotPosRow();

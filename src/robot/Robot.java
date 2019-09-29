@@ -32,7 +32,8 @@ public class Robot {
     private boolean reachedGoal;
     private final boolean actualBot;
     private boolean isRunning;
-
+    private int wp_row= 0;
+    private int wp_col= 0;
    /* public Robot(int row, int col, boolean actualBot) {
         this(row, col, actualBot, RobotConstants.START_DIR);
     }*/
@@ -44,13 +45,26 @@ public class Robot {
         speed = RobotConstants.SPEED;
 
         this.actualBot = actualBot;
-
+        this.isRunning = false;
         SRFrontLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, this.robotDir, "frontIR_2");//index1
         SRFrontCenter = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol, this.robotDir, "frontIR_4");//index3
         SRFrontRight = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol + 1, this.robotDir, "frontIR_5");//index4
         SRLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, findNewDir(MOVEMENT.LEFT), "leftIR_1"); //index0
         SRRight = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol + 1, findNewDir(MOVEMENT.RIGHT), "rightIR_3");//index2
         LRLeft = new Sensor(RobotConstants.SENSOR_LONG_RANGE_L, RobotConstants.SENSOR_LONG_RANGE_H, this.posRow, this.posCol - 1, findNewDir(MOVEMENT.LEFT), "leftIR_6");//index5
+    }
+
+    public void setWaypoint(int row, int col){
+        this.wp_row = row;
+        this.wp_col = col;
+    }
+
+    public int getWP_row(){
+        return wp_row;
+    }
+
+    public int getWP_col(){
+        return wp_col;
     }
 
     public void setRobotPos(int row, int col) {
@@ -70,8 +84,11 @@ public class Robot {
         this.robotDir = robotDir;
     }
 
-    public boolean getRobotStatus(){
-        return isRunning;
+    public String getRobotStatus(){
+        if(isRunning) 
+            return "exploring";
+        else
+            return "idle";
     }
     
     public void setRobotStatus(boolean status){
@@ -158,7 +175,9 @@ public class Robot {
                 break;
         }//end switch
         if (actualBot) sendMovement(m, sendMoveToAndroid);
-        else System.out.println("Move: " + MOVEMENT.print(m));
+        else {
+            System.out.println("Move: " + MOVEMENT.print(m));
+        }
 
         setReachedGoal();
     }
@@ -327,6 +346,7 @@ public class Robot {
             SRLeft.sense(explorationMap, actualMap);
             SRRight.sense(explorationMap, actualMap);
             LRLeft.sense(explorationMap, actualMap);
+
         } else {
             int[] result = new int[6];
             Arrays.fill(result, 0);
