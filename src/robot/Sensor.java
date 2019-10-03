@@ -149,8 +149,11 @@ public class Sensor {
             }
 
             // Override previous obstacle value if front sensors detect no obstacle.
+            //frontIR2 is long range
             if (exploredMap.getCell(row, col).getIsObstacle()) {
-                if (name.equals("frontIR_2") || name.equals("frontIR_4") || name.equals("frontIR_5")) {
+                //if (name.equals("frontIR_2") || name.equals("frontIR_4") || name.equals("frontIR_5")) {
+                if (name.equals("frontIR_4") || name.equals("frontIR_5")) {
+
                     exploredMap.setObstacleCell(row, col, false);
                 } else {
                     break;

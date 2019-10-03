@@ -2,7 +2,9 @@ package utilities;
 
 //import utilities.sendToandroid;
 import java.io.*;
+import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +28,7 @@ public class CommMgr {
     public static final String SENSOR_DATA = "SENSOR_DATA";               // Arduino --> PC
     public static final String HOST = "192.168.3.1";
     public static final int PORT = 9999;
-    public String statusString="";
+    public String statusString="exploring";
     private static CommMgr commMgr = null;
     private static Socket socket = null;
 
@@ -124,6 +126,7 @@ public class CommMgr {
                 msgToSend = msgType + " " + msg + " ";
             }*/
             else if(msgType.equals(INSTRUCTIONS)){
+                TimeUnit.MILLISECONDS.sleep(500);
                 msgToSend = msgType + " " + msg + "\n";
             } 
             else {
@@ -169,6 +172,7 @@ public class CommMgr {
     public boolean isConnected(String msgType, String msg) {
         return socket.isConnected();
     }
+
     public String sendToAndroid(String mapString,String robotString, String statusString){
         String map = "\"map\":";
         String explored = "\"explored\":";
@@ -189,7 +193,7 @@ public class CommMgr {
         }
         
         if(robotString.length()!=0){
-            String [] temp1 = robotString.split(" ");
+            String [] temp1 = robotString.split(",");
             robot_row = temp1[0];
             robot_col = temp1[1];
             robot_dir = temp1[2];
@@ -209,5 +213,8 @@ public class CommMgr {
         }
         
         return finalString;
-    }
+    }//end sendToAndroid
+
+
+    
 }

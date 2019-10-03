@@ -11,19 +11,13 @@ public class testing_platform{
     public static void main(String[] arg) throws Exception{
         CommMgr temp = CommMgr.getCommMgr();
         //temp.sendToAndroid();
-        int[] result = new int[6];
         String msg = "SENSOR_DATA;-10.00;-10.00;-10.00;-10.00;-10.00;-10.00;";
-        String testing = "10.00";
-        String [] trytry =  testing.split("\\.");
-        String a = trytry[0];
-        String b = trytry[1];
-        System.out.println("a: "+ a+" "+b);
-        String s = " INSTR W";
-        byte arr[] = s.getBytes("UTF8");
-        for (byte x: arr) {
-         System.out.print(x+" ");
-      }
-    }
+        String obstacleString = "020004000800f00000000000000000000000000000000000000000000000000000000000000";
+        String exploredMapString = "fffffffffffffffffffffffffffffffffffffffffffdfffbffffffffffffffffffffffffffff";
+        
+        String result = trytry(exploredMapString);
+        System.out.println("testing result"+result);
+    }  
     
 
     public static String removeTrailingZeros(String str){
@@ -69,4 +63,46 @@ public class testing_platform{
         BigInteger hexBigIntegerExplored = new BigInteger(temp, 16);
         return hexBigIntegerExplored;
     }
+    public static String trytry(String obstacleString){
+        
+        boolean isMapD = false;
+
+        if(obstacleString.length() > 300){
+            obstacleString = obstacleString.substring(2, obstacleString.length()-2);
+            isMapD = true;
+        } //means it is map descriptor
+
+            
+
+        BigInteger hex = new BigInteger(obstacleString,16);
+        String bin = hex.toString(2);
+
+        while(bin.length()<300)
+            bin = "0" + bin;
+
+        String resultString = "";
+
+        for (int i=0; i<bin.length(); i=i+15) {
+            int j=0;
+            String subString = "";
+            while (j<15) {
+                if(j+i >= bin.length())
+                    break;
+                subString = subString + bin.charAt(j+i);
+                
+                j++;
+            }
+            resultString = subString + resultString;
+        }
+
+        if(!isMapD){
+            
+            return resultString;
+        }
+        else{
+                resultString = "11" + resultString + "11";
+                return resultString;
+        }
+    }
+    
 }

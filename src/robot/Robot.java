@@ -46,7 +46,7 @@ public class Robot {
 
         this.actualBot = actualBot;
         this.isRunning = false;
-        SRFrontLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, this.robotDir, "frontIR_2");//index1
+        SRFrontLeft = new Sensor(0, 0, this.posRow + 1, this.posCol - 1, this.robotDir, "frontIR_2");//index1
         SRFrontCenter = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol, this.robotDir, "frontIR_4");//index3
         SRFrontRight = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol + 1, this.robotDir, "frontIR_5");//index4
         SRLeft = new Sensor(RobotConstants.SENSOR_SHORT_RANGE_L, RobotConstants.SENSOR_SHORT_RANGE_H, this.posRow + 1, this.posCol - 1, findNewDir(MOVEMENT.LEFT), "leftIR_1"); //index0
@@ -277,7 +277,7 @@ public class Robot {
         CommMgr comm = CommMgr.getCommMgr();
         comm.sendMsg(MOVEMENT.print(m) + "", CommMgr.INSTRUCTIONS);
         if (m != MOVEMENT.CALIBRATE && sendMoveToAndroid) {
-            comm.sendMsg(this.getRobotPosRow() + "," + this.getRobotPosCol() + "," + DIRECTION.print(this.getRobotCurDir()), CommMgr.ROBOT_POS);
+            comm.sendMsg(this.getRobotPosCol() + "," + this.getRobotPosRow() + "," + DIRECTION.print(this.getRobotCurDir()), CommMgr.ROBOT_POS);
         }
     }
 
@@ -346,6 +346,8 @@ public class Robot {
             SRLeft.sense(explorationMap, actualMap);
             SRRight.sense(explorationMap, actualMap);
             LRLeft.sense(explorationMap, actualMap);
+            String[] mapStrings = MapDescriptor.createMapDescriptor_actual(explorationMap);
+            
 
         } else {
             int[] result = new int[6];
@@ -394,7 +396,13 @@ public class Robot {
             SRRight.sense(explorationMap, result[2]);
             LRLeft.sense(explorationMap, result[5]);
 
-            String[] mapStrings = MapDescriptor.createMapDescriptor(explorationMap);
+            String[] mapStrings;
+            if(actualBot){
+                mapStrings = MapDescriptor.createMapDescriptor_actual(explorationMap);
+            }
+            else{
+                mapStrings = MapDescriptor.createMapDescriptor(explorationMap);
+            }
             comm.sendMsg(mapStrings[0] + " " + mapStrings[1], CommMgr.MAP_STRING);
         }
 

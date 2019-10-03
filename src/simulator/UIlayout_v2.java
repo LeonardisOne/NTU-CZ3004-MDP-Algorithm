@@ -60,14 +60,14 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static JFrame main_frame;
     private static JPanel _mapCards = null;         // JPanel for map views
     private static JPanel _buttons = null;          // JPanel for buttons
-    private static boolean stop_explore = false;
+    public static boolean stop_explore = false;
     private JTextField[] explore_TextFields, ffp_TextFields;
     private static int wp_row = RobotConstants.GOAL_ROW; 
     private static int wp_col = RobotConstants.GOAL_COL;
     private JRadioButton [] speed_RadioButtons = new JRadioButton[5];
 
     private JTextField loadmap_TextField;
-    private JButton exploreBtn, ffpBtn,load_wp,loadMapButton,stop_button, resetButton;
+    private static JButton exploreBtn, ffpBtn,load_wp,loadMapButton,stop_button, resetButton;
 
     private static JLabel display_coverage;
     private static JLabel display_timeRemaining;
@@ -83,9 +83,10 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
     private static int timeLimit = 3600;            // time limit in seconds
     private static int coverageLimit = 300;         // coverage limit in number of cells
 
+    private JLabel time_remaining;
+
     private  static CommMgr comm = CommMgr.getCommMgr();
     private static boolean actualRun = false;
-
 
     /**
      * Initialises the different maps and displays the application.
@@ -324,7 +325,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         JLabel coverage_progress = new JLabel("Coverage (%): ");
         coverage_progress.setFont(new Font("Tahoma", Font.PLAIN, 14));
 
-        JLabel time_remaining = new JLabel("Time left (sec): ");
+        time_remaining = new JLabel("Time left (sec): ");
         time_remaining.setFont(new Font("Tahoma", Font.PLAIN, 14));
 
         display_coverage = new JLabel("0%");
@@ -343,10 +344,18 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         ffp_TextFields = new JTextField[2];
 
          //---------------fastest path button--------------------
-        ffpBtn = new JButton("Navigate");   
+        ffpBtn = new JButton("Navigate");  
+        ffpBtn.setEnabled(false); 
         load_wp = new JButton("Load way point");
+        load_wp.setEnabled(false);
         load_wp.setActionCommand("Load_waypoint");
         load_wp.addActionListener(this);
+        load_wp.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                actualMap.revalidate();
+            }
+        });
+
         if (actualRun) {
             ffpBtn.setActionCommand("FindFastestPath_actual");
             ffpBtn.addActionListener(this);
@@ -470,18 +479,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 fastestPath.runFastestPath(wp_row, wp_col);
                 DIRECTION temp = bot.getRobotCurDir();
                 FastestPathAlgo _2ndRun;
-                //bot.setRobotPos(wp_row, wp_col);
-                //bot.setRobotDir(temp);
                 _2ndRun = new FastestPathAlgo(exploredMap, bot);
                 _2ndRun.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
 
-                /*if(wp_row!=RobotConstants.GOAL_ROW && wp_col!=RobotConstants.GOAL_COL){
-                    fastestPath.runFastestPath(wp_row, wp_col);
-                    fastestPath.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);
-                }
-                else
-                    fastestPath.runFastestPath(RobotConstants.GOAL_ROW, RobotConstants.GOAL_COL);*/
-                //exploredMap.repaint();
                 return 222;
             }
         }
@@ -505,9 +505,10 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 if (actualRun) {
                     CommMgr.getCommMgr().sendMsg(null, CommMgr.ROBOT_START);
                 }
-                
+
                 exploration.runExploration();
-               
+                enableButtons();
+
                 createMapDescriptor(exploredMap);
 
                 if (actualRun) {
@@ -528,6 +529,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
                 ExplorationAlgo timeExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
                 timeExplo.runExploration();
+                enableButtons();
 
                 createMapDescriptor(exploredMap);
 
@@ -543,7 +545,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
                 System.out.println("doing coverage"+ coverageLimit);
                 ExplorationAlgo coverageExplo = new ExplorationAlgo(exploredMap, actualMap, bot, coverageLimit, timeLimit,speed);
                 coverageExplo.runExploration();
-
+                enableButtons();
                 createMapDescriptor(exploredMap);
 
                 return 444;
@@ -558,6 +560,8 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         String cmd = e.getActionCommand();
         
         if(cmd.matches("resetMap")){
+            disableButtons();
+            stop_explore=false;
             bot.setRobotPos(RobotConstants.START_ROW, RobotConstants.START_COL);
             bot.setRobotDir(RobotConstants.DIRECTION.NORTH);
             unSelectspeed();
@@ -596,6 +600,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
         if(cmd.matches("Stop_Exploration")){
             stop_explore=true;
+
         }
 
         if(cmd.matches("ExploreMaze")){
@@ -605,55 +610,55 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             else{
                 if(explore_TextFields[0].getText().length() != 0 && 
                 explore_TextFields[1].getText().length() != 0){
-                 coverageLimit = (int) ((Integer.parseInt(explore_TextFields[0].getText())) * 300 / 100.0);
-                 timeLimit = Integer.parseInt(explore_TextFields[1].getText());    
-                 if(checkSpeedRadio()){
-                     if(coverageLimit<=0 || coverageLimit > 300 || timeLimit<=0){
-                         JOptionPane.showMessageDialog(null, "Invalid Input!!");
-                     }
- 
-                     
-                     else if(coverageLimit==300){
-                         CardLayout c2 = ((CardLayout) arena_panel.getLayout());
-                         c2.show(arena_panel, "EXPLORATION");
-                         new Exploration().execute();
-                     }
-                     
-                     else if(timeLimit>0 && timeLimit<360){
-                         if(timeLimit % 1!=0){
-                             JOptionPane.showMessageDialog(null, "Time Limit must be in Integer");
-                         }
-                         else{
-                             CardLayout cl = ((CardLayout) arena_panel.getLayout());
-                             cl.show(arena_panel, "EXPLORATION");
-                             new TimeExploration().execute();
-                         }
-                     }
-                     else{
-                         new CoverageExploration().execute();
-                         CardLayout coverage = ((CardLayout) arena_panel.getLayout());
-                         coverage.show(arena_panel, "EXPLORATION");
-                     }
-                 }//end if(checkspeedRadio())
-                 else{
-                     JOptionPane.showMessageDialog(null, "Please select robot speed!!");
-                 }    
-             }
-             else{
-                 if(explore_TextFields[0].getText().length() ==0){
-                     JOptionPane.showMessageDialog(null, "Please enter the coverage % !!");
-                 }
-                 if(explore_TextFields[1].getText().length() ==0){
-                     JOptionPane.showMessageDialog(null, "Please enter the time limit !!");
-                 }
-             }
-             }
+                coverageLimit = (int) ((Integer.parseInt(explore_TextFields[0].getText())) * 300 / 100.0);
+                timeLimit = Integer.parseInt(explore_TextFields[1].getText());    
+                if(checkSpeedRadio()){
+                    if(coverageLimit<=0 || coverageLimit > 300 || timeLimit<=0){
+                        JOptionPane.showMessageDialog(null, "Invalid Input!!");
+                    }
+
+                    
+                    else if(coverageLimit==300){
+                        CardLayout c2 = ((CardLayout) arena_panel.getLayout());
+                        c2.show(arena_panel, "EXPLORATION");
+                        new Exploration().execute();
+                    }
+                    
+                    else if(timeLimit>0 && timeLimit<360){
+                        if(timeLimit % 1!=0){
+                            JOptionPane.showMessageDialog(null, "Time Limit must be in Integer");
+                        }
+                        else{
+                            CardLayout cl = ((CardLayout) arena_panel.getLayout());
+                            cl.show(arena_panel, "EXPLORATION");
+                            new TimeExploration().execute();
+                        }
+                    }
+                    else{
+                        new CoverageExploration().execute();
+                        CardLayout coverage = ((CardLayout) arena_panel.getLayout());
+                        coverage.show(arena_panel, "EXPLORATION");
+                    }
+                }//end if(checkspeedRadio())
+                else{
+                    JOptionPane.showMessageDialog(null, "Please select robot speed!!");
+                }    
+            }
+            else{
+                if(explore_TextFields[0].getText().length() ==0){
+                    JOptionPane.showMessageDialog(null, "Please enter the coverage % !!");
+                }
+                if(explore_TextFields[1].getText().length() ==0){
+                    JOptionPane.showMessageDialog(null, "Please enter the time limit !!");
+                }
+            }
+            }
         }
 
         if(cmd.matches("ExploreMaze_actual")){
             speed = 100 ;
             timeLimit = 360;
-            coverageLimit = 100;
+            coverageLimit = 300;
             CardLayout c2 = ((CardLayout) arena_panel.getLayout());
             c2.show(arena_panel, "EXPLORATION");
             new Exploration().execute();
@@ -664,9 +669,9 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
             wp_col = (int)(Integer.parseInt(ffp_TextFields[1].getText()));
             bot.setWaypoint(wp_row,wp_col);
             System.out.println("Waypoint loaded !!!");
-            actualMap.repaint();
         }
         if(cmd.matches("FindFastestPath")){
+            time_remaining.setText("Time elapsed: ");
             actualMap.revalidate();
             CardLayout c3 = ((CardLayout) arena_panel.getLayout());
             c3.show(arena_panel, "EXPLORATION");
@@ -675,6 +680,7 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
 
 
         if(cmd.matches("FindFastestPath_actual")){
+        time_remaining.setText("Time elapsed: ");
         actualMap.revalidate();
         CardLayout c3 = ((CardLayout) arena_panel.getLayout());
         c3.show(arena_panel, "EXPLORATION");
@@ -724,4 +730,21 @@ public class UIlayout_v2 extends JFrame implements ActionListener {
         else
             return true;
     }
+
+    public void setTimeFastestPath(int timetaken){
+        display_timeRemaining.setText(Integer.toString(timetaken));
+    }
+
+    public boolean getStopExploreStatus(){
+        return stop_explore;
+    }
+    public static void enableButtons(){
+        ffpBtn.setEnabled(true);
+        load_wp.setEnabled(true);
+    }
+    public static void disableButtons(){
+        ffpBtn.setEnabled(false);
+        load_wp.setEnabled(false);
+    }
+
 }

@@ -274,10 +274,7 @@ public class Map extends JPanel {
 			return true;
 		}
     }
-    //paint waypoint
-    public void paintWP(int row, int col){
-        Color wp_color = GraphicsConstants.C_waypoint;
-    }
+    
     /**
      * Overrides JComponent's paintComponent() method. It creates a 2-D array of _DisplayCell objects
      * to store the current map state. Then, it paints the cells for the grid with the appropriate colors as
@@ -315,6 +312,7 @@ public class Map extends JPanel {
 
             }
         }
+
         //paint waypoint
         g.setColor(GraphicsConstants.C_waypoint);
         int wp_row = bot.getWP_row();

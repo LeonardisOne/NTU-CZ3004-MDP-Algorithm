@@ -7,10 +7,13 @@ import robot.Robot;
 import robot.RobotConstants;
 import robot.RobotConstants.DIRECTION;
 import robot.RobotConstants.MOVEMENT;
+import simulator.UIlayout_v2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
+import java.util.Timer;
+import java.util.TimerTask;
 
 // @formatter:off
 /**
@@ -38,6 +41,9 @@ public class FastestPathAlgo {
     private int loopCounter;
     private boolean explorationMode;
     private DIRECTION prevDirection;
+    private int display_timeElapsed;
+    private UIlayout_v2 _ui = new UIlayout_v2();
+    private boolean runTimer = true;
     public FastestPathAlgo(Map exploredMap, Robot bot) {
         this.actualMap = null;
         initObject(exploredMap, bot);
@@ -173,6 +179,19 @@ public class FastestPathAlgo {
      * Find the fastest path from the robot's current position to [goalRow, goalCol].
      */
     public String runFastestPath(int goalRow, int goalCol) {
+        if(goalRow!=RobotConstants.GOAL_ROW && goalCol!=RobotConstants.GOAL_COL){
+            if(exploredMap.isCellObstacle(goalRow, goalCol-1)){
+                goalCol = goalCol+1;
+            }//left side of waypoint is obstacle
+            else if(exploredMap.isCellObstacle(goalRow, goalCol+1)){
+                goalCol = goalCol-1;
+            }
+            else if(exploredMap.isCellObstacle(goalRow+1, goalCol+1)){
+                goalCol = goalCol-1;
+            }
+
+
+        }
         System.out.println("Calculating fastest path from (" + current.getRow() + ", " + current.getCol() + ") to goal (" + goalRow + ", " + goalCol + ")...");
         
         Stack<Cell> path;
@@ -249,6 +268,21 @@ public class FastestPathAlgo {
         return null;
     }
 
+    public void startTimer(){
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask(){
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                display_timeElapsed++;
+                
+                _ui.setTimer(display_timeElapsed);
+                
+            }
+        };
+        timer.scheduleAtFixedRate(task, 1000, 1000);
+}
+
     /**
      * Generates path in reverse using the parents HashMap.
      */
@@ -267,6 +301,7 @@ public class FastestPathAlgo {
         return actualPath;
     }
 
+    
     /**
      * Executes the fastest path and returns a StringBuilder object with the path steps.
      */
@@ -349,7 +384,7 @@ public class FastestPathAlgo {
                     bot.move(x, true);
                     exploredMap.revalidate();
                 }
-            }
+            }//end for(MOVEMENT x : movements)
 
             if (fCount > 0) {
                 bot.moveForwardMultiCell(fCount);
